@@ -1,0 +1,28 @@
+=========================================================================
+=                           NOTICE                                    =
+=========================================================================
+
+Copyright 2026 重庆沛雨霖科技有限公司 (PYLinTech)
+Contact: PYLinTech@163.com
+
+This product includes software developed at or derived from the following
+open source projects:
+
+-------------------------------------------------------------------------
+This product is licensed under the Apache License 2.0
+-------------------------------------------------------------------------
+
+** Go Standard Library
+  - Project: https://go.dev/
+  - License: BSD 3-Clause License
+
+=========================================================================
+
+All rights reserved for the above mentioned open source software.
+Their respective licenses apply to use, reproduction, and distribution.
+
+For the Apache License 2.0, a copy of the license is available at:
+http://www.apache.org/licenses/LICENSE-2.0
+
+For the BSD 3-Clause License, a copy of the license is available at:
+https://opensource.org/licenses/BSD-3-Clause
