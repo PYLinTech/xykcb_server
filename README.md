@@ -5,6 +5,12 @@ Contact: PYLinTech@163.com
 
 高并发选课数据获取 API 服务。
 
+## 功能特性
+
+- 支持多学校登录
+- 配置文件热更新
+- 服务器优雅关闭
+
 ## 支持学校
 
 | ID | 中文名称 | 英文名称 |
@@ -46,11 +52,38 @@ GET /api/get-course-data?school=<id>&account=<account>&password=<password>
 - `account`: 账号
 - `password`: 密码
 
-响应：
+响应（湖南工学院移动端）：
 ```json
 {
   "success": true,
-  "data": []
+  "data": {
+    "2025-2026-2": {
+      "semesterStart": "2026-03-02",
+      "totalWeeks": 20,
+      "timeSlots": [
+        {"section": 1, "start": "08:30", "end": "09:15"},
+        {"section": 2, "start": "09:20", "end": "10:05"},
+        {"section": 3, "start": "10:25", "end": "11:10"},
+        {"section": 4, "start": "11:15", "end": "12:00"},
+        {"section": 5, "start": "14:00", "end": "14:45"},
+        {"section": 6, "start": "14:50", "end": "15:35"},
+        {"section": 7, "start": "15:55", "end": "16:40"},
+        {"section": 8, "start": "16:45", "end": "17:30"},
+        {"section": 9, "start": "19:00", "end": "19:45"},
+        {"section": 10, "start": "19:50", "end": "20:35"}
+      ],
+      "courses": [
+        {
+          "id": "A001",
+          "name": "高等数学",
+          "location": "教学楼A101",
+          "teacher": "张三",
+          "weeks": [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18],
+          "schedule": {"1": [1,2], "3": [3,4]}
+        }
+      ]
+    }
+  }
 }
 ```
 
@@ -58,10 +91,28 @@ GET /api/get-course-data?school=<id>&account=<account>&password=<password>
 ```json
 {
   "success": false,
-  "msg_zhcn": "不支持的学校: 6",
-  "msg_en": "School not supported: 6"
+  "msg_zhcn": "账号或密码错误",
+  "msg_en": "Invalid account or password"
 }
 ```
+
+## 配置文件
+
+### assets/config.json
+
+```json
+{
+  "server": {
+    "port": "8080",
+    "httpReadTimeout": 30,
+    "httpWriteTimeout": 30
+  }
+}
+```
+
+### assets/school_config.json
+
+学校配置 JSON 文件，可配置各学校的学期信息、时间段等。
 
 ## 快速开始
 
@@ -82,7 +133,6 @@ GET /api/get-course-data?school=<id>&account=<account>&password=<password>
 │   ├── model/           # 数据模型
 │   └── provider/        # 学校提供者
 │       └── schools/     # 各学校实现
-├── assets/             # 静态资源
-├── test/               # 测试页面
+├── assets/             # 静态资源（配置、404页面）
 └── run.sh              # 运行脚本
 ```
