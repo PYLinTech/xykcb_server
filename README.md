@@ -106,9 +106,21 @@ GET /api/get-course-data?school=<id>&account=<account>&password=<password>
     "port": "8080",
     "httpReadTimeout": 30,
     "httpWriteTimeout": 30
+  },
+  "cors": {
+    "allowAll": true,
+    "allowedHosts": []
   }
 }
 ```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| server.port | string | 服务器端口，默认 8080 |
+| server.httpReadTimeout | int | HTTP 读取超时（秒），默认 30 |
+| server.httpWriteTimeout | int | HTTP 写入超时（秒），默认 30 |
+| cors.allowAll | bool | 是否允许所有域名跨域，true 为允许 |
+| cors.allowedHosts | array | 允许跨域的域名列表，当 allowAll 为 false 时生效 |
 
 ### assets/school_config.json
 

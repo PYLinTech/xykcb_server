@@ -15,8 +15,14 @@ type ServerConfig struct {
 	HttpWriteTimeout int    `json:"httpWriteTimeout"`
 }
 
+type CORSConfig struct {
+	AllowAll     bool     `json:"allowAll"`
+	AllowedHosts []string `json:"allowedHosts"`
+}
+
 type Config struct {
 	Server ServerConfig `json:"server"`
+	CORS   CORSConfig   `json:"cors"`
 }
 
 type TimeSlot struct {
@@ -98,6 +104,13 @@ func GetSchoolConfigById(id string) *SchoolSemesters {
 		return &s
 	}
 	return nil
+}
+
+func GetCORSConfig() *CORSConfig {
+	if serverCfg == nil {
+		return &CORSConfig{AllowAll: true}
+	}
+	return &serverCfg.CORS
 }
 
 func WatchAssets(onConfigChange, onSchoolChange, onNotFoundChange func()) {

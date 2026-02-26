@@ -3,5 +3,9 @@
     "port": "8080",
     "httpReadTimeout": 30,
     "httpWriteTimeout": 30
+  },
+  "cors": {
+    "allowAll": true,
+    "allowedHosts": []
   }
 }
