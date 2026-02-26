@@ -1,0 +1,48 @@
+{
+  "1": {
+    "semesters": {
+      "2025-2026-2": {
+        "semesterStart": "2026-03-02",
+        "totalWeeks": 20,
+        "timeSlots": [
+          { "section": 1, "start": "08:30", "end": "10:05" },
+          { "section": 2, "start": "10:25", "end": "12:00" },
+          { "section": 3, "start": "14:00", "end": "15:35" },
+          { "section": 4, "start": "15:55", "end": "17:30" },
+          { "section": 5, "start": "19:00", "end": "20:35" }
+        ]
+      },
+      "2025-2026-1": {
+        "semesterStart": "2025-09-01",
+        "totalWeeks": 20,
+        "timeSlots": [
+          { "section": 1, "start": "08:30", "end": "10:05" },
+          { "section": 2, "start": "10:25", "end": "12:00" },
+          { "section": 3, "start": "14:00", "end": "15:35" },
+          { "section": 4, "start": "15:55", "end": "17:30" },
+          { "section": 5, "start": "19:00", "end": "20:35" }
+        ]
+      },
+      "2024-2025-2": {
+        "semesterStart": "2025-02-17",
+        "totalWeeks": 20,
+        "timeSlots": [
+          { "section": 1, "start": "08:30", "end": "10:05" },
+          { "section": 2, "start": "10:25", "end": "12:00" },
+          { "section": 3, "start": "14:00", "end": "15:35" },
+          { "section": 4, "start": "15:55", "end": "17:30" },
+          { "section": 5, "start": "19:00", "end": "20:35" }
+        ]
+      }
+    }
+  },
+  "2": {
+    "semesters": {}
+  },
+  "3": {
+    "semesters": {}
+  },
+  "4": {
+    "semesters": {}
+  }
+}

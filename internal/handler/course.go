@@ -19,31 +19,53 @@ func setCORSHeaders(w http.ResponseWriter) {
 
 func (h *CourseHandler) HandleCourse(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodOptions { setCORSHeaders(w); return }
-	if r.Method != http.MethodGet { http.Error(w, "Method not allowed", http.StatusMethodNotAllowed); return }
+	if r.Method != http.MethodGet {
+		h.error(w, http.StatusMethodNotAllowed, "Method not allowed", "Method not allowed")
+		return
+	}
 
 	school, account, password := r.URL.Query().Get("school"), r.URL.Query().Get("account"), r.URL.Query().Get("password")
 	if school == "" || account == "" || password == "" {
-		resp := model.CourseResponse{Success: false, MsgZhcn: "缺少必要参数：school, account, password", MsgEn: "Missing required parameters"}
-		setCORSHeaders(w); w.Header().Set("Content-Type", "application/json"); w.WriteHeader(http.StatusBadRequest); json.NewEncoder(w).Encode(resp); return
+		h.error(w, http.StatusBadRequest, "缺少必要参数：school, account, password", "Missing required parameters")
+		return
 	}
 
 	p, ok := h.registry.Get(school)
 	if !ok {
-		resp := model.CourseResponse{Success: false, MsgZhcn: "不支持的学校: " + school, MsgEn: "School not supported: " + school}
-		setCORSHeaders(w); w.Header().Set("Content-Type", "application/json"); w.WriteHeader(http.StatusNotFound); json.NewEncoder(w).Encode(resp); return
+		h.error(w, http.StatusNotFound, "不支持的学校: "+school, "School not supported: "+school)
+		return
 	}
 
 	resp, err := p.Login(account, password)
 	if err != nil {
-		resp := model.CourseResponse{Success: false, MsgZhcn: err.Error(), MsgEn: err.Error()}
-		setCORSHeaders(w); w.Header().Set("Content-Type", "application/json"); w.WriteHeader(http.StatusInternalServerError); json.NewEncoder(w).Encode(resp); return
+		h.error(w, http.StatusInternalServerError, err.Error(), err.Error())
+		return
 	}
 
-	setCORSHeaders(w); w.Header().Set("Content-Type", "application/json"); w.WriteHeader(http.StatusOK); json.NewEncoder(w).Encode(resp)
+	h.json(w, http.StatusOK, resp)
 }
 
 func (h *CourseHandler) GetSupportedSchools(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodOptions { setCORSHeaders(w); return }
-	if r.Method != http.MethodGet { http.Error(w, "Method not allowed", http.StatusMethodNotAllowed); return }
-	setCORSHeaders(w); w.Header().Set("Content-Type", "application/json"); w.WriteHeader(http.StatusOK); json.NewEncoder(w).Encode(map[string]interface{}{"success": true, "data": h.registry.ListAll()})
+	if r.Method != http.MethodGet {
+		h.error(w, http.StatusMethodNotAllowed, "Method not allowed", "Method not allowed")
+		return
+	}
+	h.json(w, http.StatusOK, map[string]interface{}{"success": true, "data": h.registry.ListAll()})
+}
+
+func (h *CourseHandler) json(w http.ResponseWriter, code int, data interface{}) {
+	setCORSHeaders(w)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	encoder := json.NewEncoder(w)
+	encoder.SetEscapeHTML(false)
+	encoder.Encode(data)
+}
+
+func (h *CourseHandler) error(w http.ResponseWriter, code int, msgZhcn, msgEn string) {
+	setCORSHeaders(w)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(model.CourseResponse{Success: false, MsgZhcn: msgZhcn, MsgEn: msgEn})
 }

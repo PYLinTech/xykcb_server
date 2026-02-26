@@ -1,25 +1,9 @@
-# Dependencies
-node_modules/
-
 # Build output
-dist/
-build/
 xykcb_server
 
 # Go
 go.sum
 
-# Environment files
-.env
-.env.local
-.env.*.local
-
 # IDE and editor
-.vscode/
-.idea/
 .claude/
 CLAUDE.md
-
-# OS
-Thumbs.db
-.DS_Store
