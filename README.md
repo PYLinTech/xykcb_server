@@ -1,4 +1,4 @@
-# 选课数据获取服务
+# 小雨课程表服务端
 
 Copyright 2026 重庆沛雨霖科技有限公司 (PYLinTech)
 Contact: PYLinTech@163.com
