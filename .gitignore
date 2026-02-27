@@ -1,9 +1,3 @@
-# Build output
 xykcb_server
-
-# Go
 go.sum
-
-# IDE and editor
 .claude/
-CLAUDE.md
