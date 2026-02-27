@@ -18,7 +18,7 @@
 2. 查看提交风格：`git log --oneline -5`
 3. 分析变更内容，生成commit信息
 4. **用户确认commit信息后**再执行：
-   - 添加文件：`git add <file>`
+   - 添加文件：`git add -A`
    - 检查：`git status`
    - 提交：`git commit -m "type: 描述"`
    - 推送：`git push`
