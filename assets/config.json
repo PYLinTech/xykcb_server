@@ -5,7 +5,7 @@
     "httpWriteTimeout": 30
   },
   "cors": {
-    "allowAll": true,
-    "allowedHosts": []
+    "allowAll": false,
+    "allowedHosts": ["https://api.pylin.cn", "https://xykcb.pylin.cn"]
   }
 }

@@ -25,7 +25,7 @@ Contact: PYLinTech@163.com
 ### 获取支持学校列表
 
 ```
-GET /api/get-support-school
+GET /get-support-school
 ```
 
 响应：
@@ -44,7 +44,7 @@ GET /api/get-support-school
 ### 获取课程数据
 
 ```
-GET /api/get-course-data?school=<id>&account=<account>&password=<password>
+GET /get-course-data?school=<id>&account=<account>&password=<password>
 ```
 
 参数：
@@ -119,8 +119,8 @@ GET /api/get-course-data?school=<id>&account=<account>&password=<password>
 | server.port | string | 服务器端口，默认 8080 |
 | server.httpReadTimeout | int | HTTP 读取超时（秒），默认 30 |
 | server.httpWriteTimeout | int | HTTP 写入超时（秒），默认 30 |
-| cors.allowAll | bool | 是否允许所有域名跨域，true 为允许 |
-| cors.allowedHosts | array | 允许跨域的域名列表，当 allowAll 为 false 时生效 |
+| cors.allowAll | bool | 是否允许所有域名跨域，true 为允许，false 为只允许 specifiedHosts |
+| cors.allowedHosts | array | 允许跨域的域名列表，当 allowAll 为 false 时生效，格式：`["https://api.pylin.cn", "https://xykcb.pylin.cn"]` |
 
 ### assets/school_config.json
 

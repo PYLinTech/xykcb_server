@@ -18,8 +18,8 @@ var srv *http.Server
 func startServer(cfg *config.Config) {
 	mux := http.NewServeMux()
 	courseHandler := handler.NewCourseHandler()
-	mux.HandleFunc("/api/get-course-data", courseHandler.HandleCourse)
-	mux.HandleFunc("/api/get-support-school", courseHandler.GetSupportedSchools)
+	mux.HandleFunc("/get-course-data", courseHandler.HandleCourse)
+	mux.HandleFunc("/get-support-school", courseHandler.GetSupportedSchools)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
