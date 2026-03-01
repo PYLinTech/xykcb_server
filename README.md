@@ -13,12 +13,12 @@ Contact: PYLinTech@163.com
 
 ## 支持学校
 
-| ID | 中文名称 | 英文名称 |
-|----|----------|----------|
-| 1 | 湖南工学院（移动端） | Hunan Institute Of Technology (Mobile) |
-| 2 | 湖南工学院（PC端） | Hunan Institute Of Technology (PC) |
-| 3 | 衡阳师范学院 | Hengyang Normal University |
-| 4 | 南华大学 | University of South China |
+| providerKey | 中文名称 | 英文名称 |
+|-------------|----------|----------|
+| hnit_a | 湖南工学院（移动端） | Hunan Institute Of Technology (Mobile) |
+| hnit_b | 湖南工学院（PC端） | Hunan Institute Of Technology (PC) |
+| hynu | 衡阳师范学院 | Hengyang Normal University |
+| usc | 南华大学 | University of South China |
 
 ## API 接口
 
@@ -33,10 +33,10 @@ GET /get-support-school
 {
   "success": true,
   "data": [
-    {"id": "1", "desc_key": "hnit_a"},
-    {"id": "2", "desc_key": "hnit_b"},
-    {"id": "3", "desc_key": "hynu"},
-    {"id": "4", "desc_key": "usc"}
+    {"id": "hnit_a", "desc_key": "hnit_a"},
+    {"id": "hnit_b", "desc_key": "hnit_b"},
+    {"id": "hynu", "desc_key": "hynu"},
+    {"id": "usc", "desc_key": "usc"}
   ]
 }
 ```
@@ -44,11 +44,11 @@ GET /get-support-school
 ### 获取课程数据
 
 ```
-GET /get-course-data?school=<id>&account=<account>&password=<password>
+GET /get-course-data?school=<providerKey>&account=<account>&password=<password>
 ```
 
 参数：
-- `school`: 学校 ID
+- `school`: 学校 providerKey（如 hnit_a, hnit_b, hynu, usc）
 - `account`: 账号
 - `password`: 密码
 

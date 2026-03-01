@@ -27,7 +27,7 @@ func init() {
 
 func Default() *Registry { return defaultRegistry }
 
-func (r *Registry) Register(p SchoolProvider) { r.providers[p.GetSchoolId()] = p }
+func (r *Registry) Register(p SchoolProvider) { r.providers[p.GetProviderKey()] = p }
 
 func (r *Registry) Get(school string) (SchoolProvider, bool) {
 	p, ok := r.providers[school]
