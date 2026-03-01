@@ -30,9 +30,8 @@ var locationRe = regexp.MustCompile(`\(.*?\)|（.*?）`)
 
 func init() { provider.Default().Register(&HnitA{}) }
 
-func (s *HnitA) GetSchoolId() string   { return "1" }
-func (s *HnitA) GetNameZhcn() string   { return "湖南工学院（移动端）" }
-func (s *HnitA) GetNameEn() string     { return "Hunan Institute Of Technology (Mobile)" }
+func (s *HnitA) GetSchoolId() string    { return "1" }
+func (s *HnitA) GetProviderKey() string { return "hnit_a" }
 
 func (s *HnitA) GetSchoolConfig() *config.SchoolSemesters {
 	return config.GetSchoolConfigById("1")
@@ -40,9 +39,9 @@ func (s *HnitA) GetSchoolConfig() *config.SchoolSemesters {
 
 func (s *HnitA) error(msg string) *model.CourseResponse {
 	if strings.Contains(msg, "密码错误") {
-		return &model.CourseResponse{Success: false, MsgZhcn: "账号或密码错误", MsgEn: "Invalid account or password"}
+		return &model.CourseResponse{Success: false, DescKey: "003"}
 	}
-	return &model.CourseResponse{Success: false, MsgZhcn: "登录失败", MsgEn: "Login failed"}
+	return &model.CourseResponse{Success: false, DescKey: "004"}
 }
 
 func cleanLocation(location string) string {

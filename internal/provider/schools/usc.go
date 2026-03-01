@@ -10,9 +10,8 @@ type Usc struct{}
 
 func init() { provider.Default().Register(&Usc{}) }
 
-func (s *Usc) GetSchoolId() string   { return "4" }
-func (s *Usc) GetNameZhcn() string   { return "南华大学" }
-func (s *Usc) GetNameEn() string     { return "University of South China" }
+func (s *Usc) GetSchoolId() string    { return "4" }
+func (s *Usc) GetProviderKey() string { return "usc" }
 
 func (s *Usc) GetSchoolConfig() *config.SchoolSemesters {
 	return config.GetSchoolConfigById("4")

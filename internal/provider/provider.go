@@ -9,8 +9,7 @@ import (
 
 type SchoolProvider interface {
 	GetSchoolId() string
-	GetNameZhcn() string
-	GetNameEn() string
+	GetProviderKey() string
 	Login(account, password string) (*model.CourseResponse, error)
 }
 
@@ -36,18 +35,16 @@ func (r *Registry) Get(school string) (SchoolProvider, bool) {
 }
 
 type SchoolInfo struct {
-	Id       string `json:"id"`
-	NameZhcn string `json:"name_zhcn"`
-	NameEn   string `json:"name_en"`
+	Id      string `json:"id"`
+	DescKey string `json:"desc_key"`
 }
 
 func (r *Registry) ListAll() []SchoolInfo {
 	infos := make([]SchoolInfo, 0, len(r.providers))
 	for _, p := range r.providers {
 		infos = append(infos, SchoolInfo{
-			Id:       p.GetSchoolId(),
-			NameZhcn: p.GetNameZhcn(),
-			NameEn:   p.GetNameEn(),
+			Id:      p.GetSchoolId(),
+			DescKey: p.GetProviderKey(),
 		})
 	}
 	return infos

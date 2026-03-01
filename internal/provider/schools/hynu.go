@@ -10,9 +10,8 @@ type Hynu struct{}
 
 func init() { provider.Default().Register(&Hynu{}) }
 
-func (s *Hynu) GetSchoolId() string   { return "3" }
-func (s *Hynu) GetNameZhcn() string   { return "衡阳师范学院" }
-func (s *Hynu) GetNameEn() string     { return "Hengyang Normal University" }
+func (s *Hynu) GetSchoolId() string    { return "3" }
+func (s *Hynu) GetProviderKey() string { return "hynu" }
 
 func (s *Hynu) GetSchoolConfig() *config.SchoolSemesters {
 	return config.GetSchoolConfigById("3")

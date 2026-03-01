@@ -32,25 +32,25 @@ func setCORSHeaders(w http.ResponseWriter, r *http.Request) {
 func (h *CourseHandler) HandleCourse(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodOptions { setCORSHeaders(w, r); return }
 	if r.Method != http.MethodGet {
-		h.error(w, r, http.StatusMethodNotAllowed, "Method not allowed", "Method not allowed")
+		h.error(w, r, http.StatusMethodNotAllowed, "005")
 		return
 	}
 
 	school, account, password := r.URL.Query().Get("school"), r.URL.Query().Get("account"), r.URL.Query().Get("password")
 	if school == "" || account == "" || password == "" {
-		h.error(w, r, http.StatusBadRequest, "缺少必要参数：school, account, password", "Missing required parameters")
+		h.error(w, r, http.StatusBadRequest, "001")
 		return
 	}
 
 	p, ok := h.registry.Get(school)
 	if !ok {
-		h.error(w, r, http.StatusNotFound, "不支持的学校: "+school, "School not supported: "+school)
+		h.error(w, r, http.StatusNotFound, "002")
 		return
 	}
 
 	resp, err := p.Login(account, password)
 	if err != nil {
-		h.error(w, r, http.StatusInternalServerError, err.Error(), err.Error())
+		h.error(w, r, http.StatusInternalServerError, "006")
 		return
 	}
 
@@ -60,7 +60,7 @@ func (h *CourseHandler) HandleCourse(w http.ResponseWriter, r *http.Request) {
 func (h *CourseHandler) GetSupportedSchools(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodOptions { setCORSHeaders(w, r); return }
 	if r.Method != http.MethodGet {
-		h.error(w, r, http.StatusMethodNotAllowed, "Method not allowed", "Method not allowed")
+		h.error(w, r, http.StatusMethodNotAllowed, "005")
 		return
 	}
 	h.json(w, r, http.StatusOK, map[string]interface{}{"success": true, "data": h.registry.ListAll()})
@@ -75,9 +75,9 @@ func (h *CourseHandler) json(w http.ResponseWriter, r *http.Request, code int, d
 	encoder.Encode(data)
 }
 
-func (h *CourseHandler) error(w http.ResponseWriter, r *http.Request, code int, msgZhcn, msgEn string) {
+func (h *CourseHandler) error(w http.ResponseWriter, r *http.Request, code int, descKey string) {
 	setCORSHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	json.NewEncoder(w).Encode(model.CourseResponse{Success: false, MsgZhcn: msgZhcn, MsgEn: msgEn})
+	json.NewEncoder(w).Encode(model.CourseResponse{Success: false, DescKey: descKey})
 }

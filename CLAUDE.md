@@ -4,7 +4,7 @@
 
 - **type类型**：feat、fix、docs、style、refactor、perf、test、build、ci、chore、revert
 - **描述标题**：简洁明确，不超过30字符
-- **描述内容**：分点列出，每个变更点用一句话概括
+- **描述内容**：分点列出，每个变更点用一句话概括（**必须使用英文**）
 
 ## 禁止事项
 
@@ -18,7 +18,7 @@
 2. 查看提交风格：`git log --oneline -5`
 3. 分析变更内容，生成commit信息
 4. **用户确认commit信息后**再执行：
-   - 添加文件：`git add -A`
+   - **务必使用** `git add -A` 添加所有文件
    - 检查：`git status`
    - 提交：`git commit -m "type: 描述"`
    - 推送：`git push`

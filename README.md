@@ -33,10 +33,10 @@ GET /get-support-school
 {
   "success": true,
   "data": [
-    {"id": "1", "name_zhcn": "湖南工学院（移动端）", "name_en": "Hunan Institute Of Technology (Mobile)"},
-    {"id": "2", "name_zhcn": "湖南工学院（PC端）", "name_en": "Hunan Institute Of Technology (PC)"},
-    {"id": "3", "name_zhcn": "衡阳师范学院", "name_en": "Hengyang Normal University"},
-    {"id": "4", "name_zhcn": "南华大学", "name_en": "University of South China"}
+    {"id": "1", "desc_key": "hnit_a"},
+    {"id": "2", "desc_key": "hnit_b"},
+    {"id": "3", "desc_key": "hynu"},
+    {"id": "4", "desc_key": "usc"}
   ]
 }
 ```
@@ -91,10 +91,20 @@ GET /get-course-data?school=<id>&account=<account>&password=<password>
 ```json
 {
   "success": false,
-  "msg_zhcn": "账号或密码错误",
-  "msg_en": "Invalid account or password"
+  "desc_key": "003"
 }
 ```
+
+### 错误码对照表
+
+| desc_key | 含义 |
+|----------|------|
+| 001 | 缺少必要参数 |
+| 002 | 不支持的学校 |
+| 003 | 账号或密码错误 |
+| 004 | 登录失败 |
+| 005 | 方法不允许 |
+| 006 | 服务器内部错误 |
 
 ## 配置文件
 
