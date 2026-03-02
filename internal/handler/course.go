@@ -79,6 +79,11 @@ func (h *CourseHandler) GetSupportFunctions(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	if config.GetSchoolConfigById(school) == nil {
+		h.error(w, r, http.StatusNotFound, "002")
+		return
+	}
+
 	functions := config.GetSchoolFunctionsById(school)
 	h.json(w, r, http.StatusOK, map[string]interface{}{"success": true, "data": functions})
 }
