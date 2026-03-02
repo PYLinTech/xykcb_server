@@ -66,6 +66,23 @@ func (h *CourseHandler) GetSupportedSchools(w http.ResponseWriter, r *http.Reque
 	h.json(w, r, http.StatusOK, map[string]interface{}{"success": true, "data": h.registry.ListAll()})
 }
 
+func (h *CourseHandler) GetSupportFunctions(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodOptions { setCORSHeaders(w, r); return }
+	if r.Method != http.MethodGet {
+		h.error(w, r, http.StatusMethodNotAllowed, "005")
+		return
+	}
+
+	school := r.URL.Query().Get("school")
+	if school == "" {
+		h.error(w, r, http.StatusBadRequest, "001")
+		return
+	}
+
+	functions := config.GetSchoolFunctionsById(school)
+	h.json(w, r, http.StatusOK, map[string]interface{}{"success": true, "data": functions})
+}
+
 func (h *CourseHandler) json(w http.ResponseWriter, r *http.Request, code int, data interface{}) {
 	setCORSHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")

@@ -39,7 +39,8 @@ type SemesterConfig struct {
 }
 
 type SchoolSemesters struct {
-	Semesters map[string]SemesterConfig `json:"semesters"`
+	Semesters  map[string]SemesterConfig `json:"semesters"`
+	Functions  interface{}               `json:"functions"`
 }
 
 type SchoolConfig map[string]SchoolSemesters
@@ -127,6 +128,13 @@ func updateCache(path string, cache *fileCache) {
 func GetSchoolConfigById(id string) *SchoolSemesters {
 	if s, ok := schoolCfg[id]; ok {
 		return &s
+	}
+	return nil
+}
+
+func GetSchoolFunctionsById(id string) interface{} {
+	if s, ok := schoolCfg[id]; ok {
+		return s.Functions
 	}
 	return nil
 }

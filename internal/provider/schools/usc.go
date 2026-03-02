@@ -14,7 +14,7 @@ func (s *Usc) GetSchoolId() string    { return "4" }
 func (s *Usc) GetProviderKey() string { return "usc" }
 
 func (s *Usc) GetSchoolConfig() *config.SchoolSemesters {
-	return config.GetSchoolConfigById("4")
+	return config.GetSchoolConfigById(s.GetProviderKey())
 }
 
 func (s *Usc) Login(account, password string) (*model.CourseResponse, error) {

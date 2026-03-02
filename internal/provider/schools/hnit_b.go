@@ -14,7 +14,7 @@ func (s *HnitB) GetSchoolId() string    { return "2" }
 func (s *HnitB) GetProviderKey() string { return "hnit_b" }
 
 func (s *HnitB) GetSchoolConfig() *config.SchoolSemesters {
-	return config.GetSchoolConfigById("2")
+	return config.GetSchoolConfigById(s.GetProviderKey())
 }
 
 func (s *HnitB) Login(account, password string) (*model.CourseResponse, error) {

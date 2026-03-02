@@ -34,7 +34,7 @@ func (s *HnitA) GetSchoolId() string    { return "1" }
 func (s *HnitA) GetProviderKey() string { return "hnit_a" }
 
 func (s *HnitA) GetSchoolConfig() *config.SchoolSemesters {
-	return config.GetSchoolConfigById("1")
+	return config.GetSchoolConfigById(s.GetProviderKey())
 }
 
 func (s *HnitA) error(msg string) *model.CourseResponse {

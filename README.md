@@ -41,6 +41,25 @@ GET /get-support-school
 }
 ```
 
+### 获取学校功能列表
+
+```
+GET /get-support-function?school=<providerKey>
+```
+
+参数：
+- `school`: 学校 providerKey（如 hnit_a, hnit_b, hynu, usc）
+
+响应：
+```json
+{
+  "success": true,
+  "data": [
+    {"id": "1", "url": "", "zh-cn": "", "en": ""}
+  ]
+}
+```
+
 ### 获取课程数据
 
 ```

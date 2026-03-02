@@ -20,6 +20,7 @@ func startServer(cfg *config.Config) {
 	courseHandler := handler.NewCourseHandler()
 	mux.HandleFunc("/get-course-data", courseHandler.HandleCourse)
 	mux.HandleFunc("/get-support-school", courseHandler.GetSupportedSchools)
+	mux.HandleFunc("/get-support-function", courseHandler.GetSupportFunctions)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")

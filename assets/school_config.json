@@ -1,5 +1,9 @@
 {
-  "1": {
+  "hnit_a": {
+    "functions": [
+      { "id": "1", "url": "https://xykcb.pylin.cn/functions/hnit_a/1.html", "zh-cn": "功能1", "en": "function1" },
+      { "id": "2", "url": "https://xykcb.pylin.cn/functions/hnit_a/2.html", "zh-cn": "功能2", "en": "function2" }
+    ],
     "semesters": {
       "2025-2026-2": {
         "semesterStart": "2026-03-02",
@@ -51,13 +55,13 @@
       }
     }
   },
-  "2": {
+  "hnit_b": {
     "semesters": {}
   },
-  "3": {
+  "hynu": {
     "semesters": {}
   },
-  "4": {
+  "usc": {
     "semesters": {}
   }
 }

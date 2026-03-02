@@ -14,7 +14,7 @@ func (s *Hynu) GetSchoolId() string    { return "3" }
 func (s *Hynu) GetProviderKey() string { return "hynu" }
 
 func (s *Hynu) GetSchoolConfig() *config.SchoolSemesters {
-	return config.GetSchoolConfigById("3")
+	return config.GetSchoolConfigById(s.GetProviderKey())
 }
 
 func (s *Hynu) Login(account, password string) (*model.CourseResponse, error) {
