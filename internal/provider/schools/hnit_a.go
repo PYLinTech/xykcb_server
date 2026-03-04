@@ -158,10 +158,11 @@ func (s *HnitA) Login(account, password string) (*model.CourseResponse, error) {
 
 			mu.Lock()
 			result[semesterID] = map[string]interface{}{
-				"semesterStart": semesterConfig.SemesterStart,
-				"totalWeeks":    semesterConfig.TotalWeeks,
-				"timeSlots":     semesterConfig.TimeSlots,
-				"courses":       courses,
+				"semesterStart":     semesterConfig.SemesterStart,
+				"totalWeeks":        semesterConfig.TotalWeeks,
+				"timeSlots":         semesterConfig.TimeSlots,
+				"mergeableSections": semesterConfig.MergeableSections,
+				"courses":           courses,
 			}
 			mu.Unlock()
 		}(semesterID, semesterConfig)

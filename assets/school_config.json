@@ -1,8 +1,6 @@
 {
   "hnit_a": {
     "functions": [
-      { "id": "1", "url": "https://xykcb.pylin.cn/functions/hnit_a/1.html", "zh-cn": "功能1", "en": "function1" },
-      { "id": "2", "url": "https://xykcb.pylin.cn/functions/hnit_a/2.html", "zh-cn": "功能2", "en": "function2" }
     ],
     "semesters": {
       "2025-2026-2": {
@@ -19,7 +17,8 @@
           { "section": 8, "start": "16:45", "end": "17:30" },
           { "section": 9, "start": "19:00", "end": "19:45" },
           { "section": 10, "start": "19:50", "end": "20:35" }
-        ]
+        ],
+        "mergeableSections": ["1-2", "3-4", "5-6", "7-8", "9-10"]
       },
       "2025-2026-1": {
         "semesterStart": "2025-09-01",
@@ -35,7 +34,8 @@
           { "section": 8, "start": "16:45", "end": "17:30" },
           { "section": 9, "start": "19:00", "end": "19:45" },
           { "section": 10, "start": "19:50", "end": "20:35" }
-        ]
+        ],
+        "mergeableSections": ["1-2", "3-4", "5-6", "7-8", "9-10"]
       },
       "2024-2025-2": {
         "semesterStart": "2025-02-17",
@@ -51,12 +51,16 @@
           { "section": 8, "start": "16:45", "end": "17:30" },
           { "section": 9, "start": "19:00", "end": "19:45" },
           { "section": 10, "start": "19:50", "end": "20:35" }
-        ]
+        ],
+        "mergeableSections": ["1-2", "3-4", "5-6", "7-8", "9-10"]
       }
     }
   },
   "hnit_b": {
-    "functions": [],
+    "functions": [
+      { "id": "1", "url": "https://xykcb.pylin.cn/functions/hnit_a/1.html", "zh-cn": "功能1", "en": "function1" },
+      { "id": "2", "url": "https://xykcb.pylin.cn/functions/hnit_a/2.html", "zh-cn": "功能2", "en": "function2" }
+    ],
     "semesters": {}
   },
   "hynu": {

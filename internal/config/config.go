@@ -33,9 +33,10 @@ type TimeSlot struct {
 }
 
 type SemesterConfig struct {
-	SemesterStart string     `json:"semesterStart"`
-	TotalWeeks    int        `json:"totalWeeks"`
-	TimeSlots     []TimeSlot `json:"timeSlots"`
+	SemesterStart     string     `json:"semesterStart"`
+	TotalWeeks        int        `json:"totalWeeks"`
+	TimeSlots         []TimeSlot `json:"timeSlots"`
+	MergeableSections []string   `json:"mergeableSections"`
 }
 
 type SchoolSemesters struct {
