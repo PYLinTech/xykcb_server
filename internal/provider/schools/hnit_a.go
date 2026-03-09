@@ -132,7 +132,7 @@ func (s *HnitA) Login(account, password string) (*model.CourseResponse, error) {
 		go func(semesterID string, semesterConfig config.SemesterConfig) {
 			defer wg.Done()
 
-			curriculumResp, err := httpClient.Get("https://jw.hnit.edu.cn/njwhd/student/curriculum?token=" + token + "&xnxq01id=" + semesterID)
+			curriculumResp, err := httpClient.Get("https://jw.hnit.edu.cn/njwhd/student/curriculum?token=" + token + "&xnxq01id=" + semesterID + "&week=all")
 			if err != nil {
 				return
 			}
