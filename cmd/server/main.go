@@ -19,6 +19,7 @@ func startServer(cfg *config.Config) {
 	mux := http.NewServeMux()
 	courseHandler := handler.NewCourseHandler()
 	mux.HandleFunc("/get-course-data", courseHandler.HandleCourse)
+	mux.HandleFunc("/get-course-grades", courseHandler.HandleCourseGrades)
 	mux.HandleFunc("/get-support-school", courseHandler.GetSupportedSchools)
 	mux.HandleFunc("/get-support-function", courseHandler.GetSupportFunctions)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

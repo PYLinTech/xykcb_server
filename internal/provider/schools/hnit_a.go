@@ -172,3 +172,42 @@ func (s *HnitA) Login(account, password string) (*model.CourseResponse, error) {
 
 	return &model.CourseResponse{Success: true, Data: result}, nil
 }
+
+func (s *HnitA) GetGrades(account, password, semester string) (*model.CourseResponse, error) {
+	// 登录获取 token
+	resp, err := httpClient.Post("https://jw.hnit.edu.cn/njwhd/login?userNo="+account+"&pwd="+s.encryptPassword(password), "", nil)
+	if err != nil {
+		return s.error(err.Error()), nil
+	}
+	defer resp.Body.Close()
+
+	var loginData map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&loginData); err != nil {
+		return s.error(err.Error()), nil
+	}
+
+	if loginData["code"].(string) != "1" {
+		return s.error(loginData["Msg"].(string)), nil
+	}
+
+	token := loginData["data"].(map[string]interface{})["token"].(string)
+
+	// 请求成绩接口
+	url := "https://jw.hnit.edu.cn/njwhd/student/termGPA?token=" + token + "&semester=" + semester
+	gradesResp, err := httpClient.Get(url)
+	if err != nil {
+		return s.error(err.Error()), nil
+	}
+	defer gradesResp.Body.Close()
+
+	var gradesData map[string]interface{}
+	if err := json.NewDecoder(gradesResp.Body).Decode(&gradesData); err != nil {
+		return s.error(err.Error()), nil
+	}
+
+	if gradesData["code"].(string) != "1" {
+		return s.error(gradesData["Msg"].(string)), nil
+	}
+
+	return &model.CourseResponse{Success: true, Data: gradesData["data"]}, nil
+}

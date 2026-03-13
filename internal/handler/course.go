@@ -57,6 +57,34 @@ func (h *CourseHandler) HandleCourse(w http.ResponseWriter, r *http.Request) {
 	h.json(w, r, http.StatusOK, resp)
 }
 
+func (h *CourseHandler) HandleCourseGrades(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodOptions { setCORSHeaders(w, r); return }
+	if r.Method != http.MethodGet {
+		h.error(w, r, http.StatusMethodNotAllowed, "005")
+		return
+	}
+
+	school, account, password, semester := r.URL.Query().Get("school"), r.URL.Query().Get("account"), r.URL.Query().Get("password"), r.URL.Query().Get("semester")
+	if school == "" || account == "" || password == "" {
+		h.error(w, r, http.StatusBadRequest, "001")
+		return
+	}
+
+	p, ok := h.registry.Get(school)
+	if !ok {
+		h.error(w, r, http.StatusNotFound, "002")
+		return
+	}
+
+	resp, err := p.GetGrades(account, password, semester)
+	if err != nil {
+		h.error(w, r, http.StatusInternalServerError, "006")
+		return
+	}
+
+	h.json(w, r, http.StatusOK, resp)
+}
+
 func (h *CourseHandler) GetSupportedSchools(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodOptions { setCORSHeaders(w, r); return }
 	if r.Method != http.MethodGet {

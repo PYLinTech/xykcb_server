@@ -21,3 +21,8 @@ func (s *Usc) Login(account, password string) (*model.CourseResponse, error) {
 	// TODO: 实现登录逻辑
 	return &model.CourseResponse{Success: true, Data: nil}, nil
 }
+
+func (s *Usc) GetGrades(account, password, semester string) (*model.CourseResponse, error) {
+	// TODO: 实现成绩查询
+	return &model.CourseResponse{Success: false, DescKey: "007"}, nil
+}
