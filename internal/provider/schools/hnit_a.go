@@ -192,6 +192,22 @@ func (s *HnitA) GetGrades(account, password, semester string) (*model.CourseResp
 
 	token := loginData["data"].(map[string]interface{})["token"].(string)
 
+	// 请求 semesterList 接口
+	semesterListResp, err := httpClient.Get("https://jw.hnit.edu.cn/njwhd/semesterList?token=" + token)
+	if err != nil {
+		return s.error(err.Error()), nil
+	}
+	defer semesterListResp.Body.Close()
+
+	var semesterListData map[string]interface{}
+	if err := json.NewDecoder(semesterListResp.Body).Decode(&semesterListData); err != nil {
+		return s.error(err.Error()), nil
+	}
+
+	if semesterListData["code"].(string) != "1" {
+		return s.error(semesterListData["Msg"].(string)), nil
+	}
+
 	// 请求成绩接口
 	url := "https://jw.hnit.edu.cn/njwhd/student/termGPA?token=" + token + "&semester=" + semester
 	gradesResp, err := httpClient.Get(url)
@@ -209,5 +225,11 @@ func (s *HnitA) GetGrades(account, password, semester string) (*model.CourseResp
 		return s.error(gradesData["Msg"].(string)), nil
 	}
 
-	return &model.CourseResponse{Success: true, Data: gradesData["data"]}, nil
+	// 拼合新的 data: all-semester 和 all-grades
+	newData := map[string]interface{}{
+		"all-semester": semesterListData["data"],
+		"all-grades":   gradesData["data"],
+	}
+
+	return &model.CourseResponse{Success: true, Data: newData}, nil
 }

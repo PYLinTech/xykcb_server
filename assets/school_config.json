@@ -1,6 +1,7 @@
 {
   "hnit_a": {
     "functions": [
+        { "id": "1", "url": "/functions/hnit_a/grades.html", "zh-cn": "课程成绩", "en": "Course Grades" }
     ],
     "semesters": {
       "2025-2026-2": {
