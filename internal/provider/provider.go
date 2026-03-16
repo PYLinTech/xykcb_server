@@ -12,6 +12,7 @@ type SchoolProvider interface {
 	GetProviderKey() string
 	Login(account, password string) (*model.CourseResponse, error)
 	GetGrades(account, password, semester string) (*model.CourseResponse, error)
+	GetGuidanceTeaching(account, password string) (*model.CourseResponse, error)
 }
 
 type Registry struct {

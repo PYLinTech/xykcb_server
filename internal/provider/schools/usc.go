@@ -26,3 +26,8 @@ func (s *Usc) GetGrades(account, password, semester string) (*model.CourseRespon
 	// TODO: 实现成绩查询
 	return &model.CourseResponse{Success: false, DescKey: "007"}, nil
 }
+
+func (s *Usc) GetGuidanceTeaching(account, password string) (*model.CourseResponse, error) {
+	// TODO: 实现培养方案查询
+	return &model.CourseResponse{Success: false, DescKey: "007"}, nil
+}

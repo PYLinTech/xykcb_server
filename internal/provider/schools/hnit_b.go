@@ -26,3 +26,8 @@ func (s *HnitB) GetGrades(account, password, semester string) (*model.CourseResp
 	// TODO: 实现成绩查询
 	return &model.CourseResponse{Success: false, DescKey: "007"}, nil
 }
+
+func (s *HnitB) GetGuidanceTeaching(account, password string) (*model.CourseResponse, error) {
+	// TODO: 实现培养方案查询
+	return &model.CourseResponse{Success: false, DescKey: "007"}, nil
+}
