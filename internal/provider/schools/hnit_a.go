@@ -178,18 +178,7 @@ func (s *HnitA) Login(account, password string) (*model.CourseResponse, error) {
 		go func(semesterID string, semesterConfig config.SemesterConfig) {
 			defer wg.Done()
 
-			curriculumResp, err := httpClient.Get("https://jw.hnit.edu.cn/njwhd/student/curriculum?token=" + token + "&xnxq01id=" + semesterID + "&week=all")
-			if err != nil {
-				return
-			}
-			defer curriculumResp.Body.Close()
-
-			var curriculumData map[string]interface{}
-			if err := json.NewDecoder(curriculumResp.Body).Decode(&curriculumData); err != nil {
-				return
-			}
-
-			curriculumData, _ = s.retryWithValidToken(account, password, "https://jw.hnit.edu.cn/njwhd/student/curriculum?token="+token+"&xnxq01id="+semesterID+"&week=all", func(url string) (map[string]interface{}, error) {
+			curriculumData, err := s.retryWithValidToken(account, password, "https://jw.hnit.edu.cn/njwhd/student/curriculum?token="+token+"&xnxq01id="+semesterID+"&week=all", func(url string) (map[string]interface{}, error) {
 				resp, err := httpClient.Get(url)
 				if err != nil {
 					return nil, err
@@ -199,7 +188,7 @@ func (s *HnitA) Login(account, password string) (*model.CourseResponse, error) {
 				err = json.NewDecoder(resp.Body).Decode(&data)
 				return data, err
 			})
-			if curriculumData == nil {
+			if err != nil || curriculumData == nil {
 				return
 			}
 
@@ -240,18 +229,7 @@ func (s *HnitA) GetGrades(account, password, semester string) (*model.CourseResp
 	}
 
 	// 请求 semesterList 接口
-	semesterListResp, err := httpClient.Get("https://jw.hnit.edu.cn/njwhd/semesterList?token=" + token)
-	if err != nil {
-		return s.error(err.Error()), nil
-	}
-	defer semesterListResp.Body.Close()
-
-	var semesterListData map[string]interface{}
-	if err := json.NewDecoder(semesterListResp.Body).Decode(&semesterListData); err != nil {
-		return s.error(err.Error()), nil
-	}
-
-	semesterListData, err = s.retryWithValidToken(account, password, "https://jw.hnit.edu.cn/njwhd/semesterList?token="+token, func(url string) (map[string]interface{}, error) {
+	semesterListData, err := s.retryWithValidToken(account, password, "https://jw.hnit.edu.cn/njwhd/semesterList?token="+token, func(url string) (map[string]interface{}, error) {
 		resp, err := httpClient.Get(url)
 		if err != nil {
 			return nil, err
@@ -261,7 +239,7 @@ func (s *HnitA) GetGrades(account, password, semester string) (*model.CourseResp
 		err = json.NewDecoder(resp.Body).Decode(&data)
 		return data, err
 	})
-	if err != nil {
+	if err != nil || semesterListData == nil {
 		return s.error(err.Error()), nil
 	}
 
@@ -270,19 +248,7 @@ func (s *HnitA) GetGrades(account, password, semester string) (*model.CourseResp
 	}
 
 	// 请求成绩接口
-	url := "https://jw.hnit.edu.cn/njwhd/student/termGPA?token=" + token + "&semester=" + semester
-	gradesResp, err := httpClient.Get(url)
-	if err != nil {
-		return s.error(err.Error()), nil
-	}
-	defer gradesResp.Body.Close()
-
-	var gradesData map[string]interface{}
-	if err := json.NewDecoder(gradesResp.Body).Decode(&gradesData); err != nil {
-		return s.error(err.Error()), nil
-	}
-
-	gradesData, err = s.retryWithValidToken(account, password, "https://jw.hnit.edu.cn/njwhd/student/termGPA?token="+token+"&semester="+semester, func(url string) (map[string]interface{}, error) {
+	gradesData, err := s.retryWithValidToken(account, password, "https://jw.hnit.edu.cn/njwhd/student/termGPA?token="+token+"&semester="+semester, func(url string) (map[string]interface{}, error) {
 		resp, err := httpClient.Get(url)
 		if err != nil {
 			return nil, err
@@ -292,7 +258,7 @@ func (s *HnitA) GetGrades(account, password, semester string) (*model.CourseResp
 		err = json.NewDecoder(resp.Body).Decode(&data)
 		return data, err
 	})
-	if err != nil {
+	if err != nil || gradesData == nil {
 		return s.error(err.Error()), nil
 	}
 
@@ -316,18 +282,7 @@ func (s *HnitA) GetGuidanceTeaching(account, password string) (*model.CourseResp
 	}
 
 	// 请求 guidanceTeaching 接口
-	guidanceResp, err := httpClient.Get("https://jw.hnit.edu.cn/njwhd/student/guidanceTeaching?token=" + token)
-	if err != nil {
-		return s.error(err.Error()), nil
-	}
-	defer guidanceResp.Body.Close()
-
-	var guidanceData map[string]interface{}
-	if err := json.NewDecoder(guidanceResp.Body).Decode(&guidanceData); err != nil {
-		return s.error(err.Error()), nil
-	}
-
-	guidanceData, err = s.retryWithValidToken(account, password, "https://jw.hnit.edu.cn/njwhd/student/guidanceTeaching?token="+token, func(url string) (map[string]interface{}, error) {
+	guidanceData, err := s.retryWithValidToken(account, password, "https://jw.hnit.edu.cn/njwhd/student/guidanceTeaching?token="+token, func(url string) (map[string]interface{}, error) {
 		resp, err := httpClient.Get(url)
 		if err != nil {
 			return nil, err
@@ -337,7 +292,7 @@ func (s *HnitA) GetGuidanceTeaching(account, password string) (*model.CourseResp
 		err = json.NewDecoder(resp.Body).Decode(&data)
 		return data, err
 	})
-	if err != nil {
+	if err != nil || guidanceData == nil {
 		return s.error(err.Error()), nil
 	}
 
