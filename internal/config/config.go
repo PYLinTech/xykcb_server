@@ -14,6 +14,8 @@ type ServerConfig struct {
 	Port             string `json:"port"`
 	HttpReadTimeout  int    `json:"httpReadTimeout"`
 	HttpWriteTimeout int    `json:"httpWriteTimeout"`
+	RateLimit        int    `json:"rateLimit"`
+	RateWindow       int    `json:"rateWindow"`
 }
 
 type CORSConfig struct {
@@ -40,8 +42,8 @@ type SemesterConfig struct {
 }
 
 type SchoolSemesters struct {
-	Semesters  map[string]SemesterConfig `json:"semesters"`
-	Functions  interface{}               `json:"functions"`
+	Semesters map[string]SemesterConfig `json:"semesters"`
+	Functions interface{}               `json:"functions"`
 }
 
 type SchoolConfig map[string]SchoolSemesters
@@ -54,7 +56,7 @@ type fileCache struct {
 
 var (
 	serverV      *viper.Viper
-	schoolV     *viper.Viper
+	schoolV      *viper.Viper
 	serverCfg    *Config
 	schoolCfg    SchoolConfig
 	NotFoundHTML []byte

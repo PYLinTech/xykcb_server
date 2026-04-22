@@ -3,13 +3,15 @@ package cache
 import (
 	"sync"
 	"time"
+	"xykcb_server/internal/metrics"
 )
 
 type TokenCache struct {
-	mu      sync.RWMutex
-	entries map[string]*TokenEntry
-	ttl     time.Duration
-	maxSize int
+	mu          sync.RWMutex
+	entries     map[string]*TokenEntry
+	ttl         time.Duration
+	maxSize     int
+	cleanupDone chan struct{}
 }
 
 type TokenEntry struct {
@@ -20,10 +22,30 @@ type TokenEntry struct {
 
 func NewTokenCache(ttl time.Duration, maxSize int) *TokenCache {
 	return &TokenCache{
-		entries: make(map[string]*TokenEntry),
-		ttl:     ttl,
-		maxSize: maxSize,
+		entries:     make(map[string]*TokenEntry),
+		ttl:         ttl,
+		maxSize:     maxSize,
+		cleanupDone: make(chan struct{}),
 	}
+}
+
+func (c *TokenCache) StartCleanup(interval time.Duration) {
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				c.cleanup()
+			case <-c.cleanupDone:
+				return
+			}
+		}
+	}()
+}
+
+func (c *TokenCache) StopCleanup() {
+	close(c.cleanupDone)
 }
 
 func (c *TokenCache) Get(key string) (string, bool) {
@@ -46,7 +68,6 @@ func (c *TokenCache) Set(key, token string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// 检查容量，满了就淘汰最旧的
 	if len(c.entries) >= c.maxSize {
 		c.evictOldest()
 	}
@@ -83,7 +104,6 @@ func (c *TokenCache) evictOldest() {
 		return
 	}
 
-	// 找出最旧的 entry
 	var oldestKey string
 	var oldestTime time.Time
 	first := true
@@ -101,7 +121,6 @@ func (c *TokenCache) evictOldest() {
 	}
 }
 
-// GetAllEntries 用于调试，返回所有缓存条目
 func (c *TokenCache) GetAllEntries() map[string]struct{} {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -113,32 +132,40 @@ func (c *TokenCache) GetAllEntries() map[string]struct{} {
 	return result
 }
 
-// tokenCache 全局实例
 var tokenCache = NewTokenCache(5*time.Minute, 10000)
 
-// GetToken 获取 token，先从缓存获取，若不存在或过期则登录获取
+func GetTokenCache() *TokenCache {
+	return tokenCache
+}
+
 func GetToken(providerKey, account, password string, loginFunc func(account, password string) (string, error)) (string, error) {
 	key := providerKey + ":" + account
 
-	// 先尝试从缓存获取
 	if token, ok := tokenCache.Get(key); ok {
+		metrics.RecordTokenCacheHit()
 		return token, nil
 	}
 
-	// 缓存不存在，调用登录函数获取
+	metrics.RecordTokenCacheMiss()
 	token, err := loginFunc(account, password)
 	if err != nil {
 		return "", err
 	}
 
-	// 存入缓存
 	tokenCache.Set(key, token)
 
 	return token, nil
 }
 
-// InvalidateToken 使指定 key 的 token 失效
 func InvalidateToken(providerKey, account string) {
 	key := providerKey + ":" + account
 	tokenCache.Delete(key)
+}
+
+func StartTokenCacheCleanup(interval time.Duration) {
+	tokenCache.StartCleanup(interval)
+}
+
+func StopTokenCacheCleanup() {
+	tokenCache.StopCleanup()
 }

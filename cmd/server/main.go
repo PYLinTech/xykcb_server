@@ -8,26 +8,55 @@ import (
 	"syscall"
 	"time"
 
+	"xykcb_server/internal/cache"
 	"xykcb_server/internal/config"
 	"xykcb_server/internal/handler"
+	"xykcb_server/internal/metrics"
 	_ "xykcb_server/internal/provider/schools"
 )
 
 var srv *http.Server
+var metricsStopCh = make(chan struct{})
 
 func startServer(cfg *config.Config) {
 	mux := http.NewServeMux()
 	courseHandler := handler.NewCourseHandler()
-	mux.HandleFunc("/get-course-data", courseHandler.HandleCourse)
-	mux.HandleFunc("/get-course-grades", courseHandler.HandleCourseGrades)
-	mux.HandleFunc("/get-guidance-teaching", courseHandler.HandleGuidanceTeaching)
-	mux.HandleFunc("/get-support-school", courseHandler.GetSupportedSchools)
-	mux.HandleFunc("/get-support-function", courseHandler.GetSupportFunctions)
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotFound)
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Write(config.NotFoundHTML)
-	})
+
+	rateLimit := cfg.Server.RateLimit
+	rateWindow := time.Duration(cfg.Server.RateWindow) * time.Second
+	if rateLimit <= 0 {
+		rateLimit = 1000
+	}
+	if rateWindow <= 0 {
+		rateWindow = time.Minute
+	}
+
+	wrappedHandler := handler.Adapt(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case "/get-course-data":
+				courseHandler.HandleCourse(w, r)
+			case "/get-course-grades":
+				courseHandler.HandleCourseGrades(w, r)
+			case "/get-guidance-teaching":
+				courseHandler.HandleGuidanceTeaching(w, r)
+			case "/get-support-school":
+				courseHandler.GetSupportedSchools(w, r)
+			case "/get-support-function":
+				courseHandler.GetSupportFunctions(w, r)
+			default:
+				w.WriteHeader(http.StatusNotFound)
+				w.Header().Set("Content-Type", "text/html; charset=utf-8")
+				w.Write(config.NotFoundHTML)
+			}
+		}),
+		handler.RequestIDMiddleware(),
+		handler.LoggingMiddleware(),
+		handler.CORSMiddleware(),
+		handler.RateLimiterMiddleware(rateLimit, rateWindow),
+	)
+
+	mux.Handle("/", wrappedHandler)
 
 	srv = &http.Server{
 		Addr:         ":" + cfg.Server.Port,
@@ -60,6 +89,12 @@ func main() {
 		log.Fatalf("加载404页面失败: %v", err)
 	}
 
+	cache.StartTokenCacheCleanup(time.Minute)
+	log.Println("Token缓存清理已启动")
+
+	go metrics.StartReporter(time.Minute, metricsStopCh)
+	log.Println("指标上报已启动")
+
 	startServer(cfg)
 
 	config.WatchAssets(
@@ -88,5 +123,7 @@ func main() {
 	<-quit
 
 	log.Println("关闭服务器...")
+	cache.StopTokenCacheCleanup()
+	close(metricsStopCh)
 	stopServer()
 }

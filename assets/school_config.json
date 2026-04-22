@@ -1,7 +1,8 @@
 {
   "hnit_a": {
     "functions": [
-        { "id": "1", "url": "/functions/hnit_a/grades.html", "zh-cn": "课程成绩", "en": "Course Grades" }
+        { "id": "1", "url": "/functions/hnit_a/grades.html", "zh-cn": "课程成绩", "en": "Course Grades" },
+        { "id": "2", "url": "/functions/hnit_a/major_plan.html", "zh-cn": "培养计划", "en": "Major Plan" }
     ],
     "semesters": {
       "2025-2026-2": {
@@ -59,8 +60,8 @@
   },
   "hnit_b": {
     "functions": [
-      { "id": "1", "url": "https://xykcb.pylin.cn/functions/hnit_a/1.html", "zh-cn": "功能1", "en": "function1" },
-      { "id": "2", "url": "https://xykcb.pylin.cn/functions/hnit_a/2.html", "zh-cn": "功能2", "en": "function2" }
+      { "id": "1", "url": "https://xykcb.pylin.cn/functions/hnit_b/1.html", "zh-cn": "功能1", "en": "function1" },
+      { "id": "2", "url": "https://xykcb.pylin.cn/functions/hnit_b/2.html", "zh-cn": "功能2", "en": "function2" }
     ],
     "semesters": {}
   },
