@@ -62,40 +62,32 @@ func getScheduleField(course map[string]interface{}) map[string][]int {
 }
 
 func genCourseHash(course map[string]interface{}) string {
-	key := getStringField(course, "id") + "|" + getStringField(course, "name") + "|" + getStringField(course, "location") + "|" + getStringField(course, "teacher")
+	key := getStringField(course, "rawId") + "|" + getStringField(course, "name") + "|" + getStringField(course, "location") + "|" + getStringField(course, "teacher") + "|" + weeksKey(getIntSliceField(course, "weeks"))
 	hash := int32(0)
 	for _, r := range key {
 		hash = int32((int64(hash)<<5 - int64(hash)) + int64(r))
 	}
-	if hash < 0 {
-		hash = -hash
+	value := int64(hash)
+	if value < 0 {
+		value = -value
 	}
-	return strconv.FormatInt(int64(hash), 36)
-}
-
-func sameWeeks(a, b []int) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	set := make(map[int]struct{}, len(a))
-	for _, week := range a {
-		set[week] = struct{}{}
-	}
-	for _, week := range b {
-		if _, ok := set[week]; !ok {
-			return false
-		}
-	}
-	return true
+	return strconv.FormatInt(value, 36)
 }
 
 func weeksKey(weeks []int) string {
 	if len(weeks) == 0 {
 		return ""
 	}
-	parts := make([]string, len(weeks))
-	for i, week := range weeks {
-		parts[i] = strconv.Itoa(week)
+	sorted := append([]int(nil), weeks...)
+	sort.Ints(sorted)
+	parts := make([]string, 0, len(sorted))
+	prev := 0
+	for i, week := range sorted {
+		if i > 0 && week == prev {
+			continue
+		}
+		parts = append(parts, strconv.Itoa(week))
+		prev = week
 	}
 	return strings.Join(parts, ",")
 }
@@ -129,7 +121,7 @@ func resolveDuplicateCourseIDs(courses []map[string]interface{}) []map[string]in
 	idMap := make(map[string][]map[string]interface{})
 	idOrder := make([]string, 0)
 	for _, course := range courses {
-		id := getStringField(course, "id")
+		id := getStringField(course, "rawId")
 		if _, ok := idMap[id]; !ok {
 			idOrder = append(idOrder, id)
 		}
@@ -140,6 +132,7 @@ func resolveDuplicateCourseIDs(courses []map[string]interface{}) []map[string]in
 	for _, id := range idOrder {
 		group := idMap[id]
 		if len(group) == 1 {
+			group[0]["id"] = genCourseHash(group[0])
 			processed = append(processed, group[0])
 			continue
 		}
@@ -165,14 +158,14 @@ func resolveDuplicateCourseIDs(courses []map[string]interface{}) []map[string]in
 		}
 
 		if len(sameBasicCourses) == 0 {
+			base["id"] = genCourseHash(base)
 			processed = append(processed, base)
 			continue
 		}
 
 		weeksMap := make(map[string][]map[string]interface{})
 		weeksOrder := make([]string, 0)
-		baseWeeks := getIntSliceField(base, "weeks")
-		baseWeeksKey := weeksKey(baseWeeks)
+		baseWeeksKey := weeksKey(getIntSliceField(base, "weeks"))
 		weeksMap[baseWeeksKey] = []map[string]interface{}{base}
 		weeksOrder = append(weeksOrder, baseWeeksKey)
 
@@ -188,9 +181,7 @@ func resolveDuplicateCourseIDs(courses []map[string]interface{}) []map[string]in
 			coursesGroup := weeksMap[key]
 			first := coursesGroup[0]
 			if len(coursesGroup) == 1 {
-				if !sameWeeks(baseWeeks, getIntSliceField(first, "weeks")) {
-					first["id"] = genCourseHash(first)
-				}
+				first["id"] = genCourseHash(first)
 				processed = append(processed, first)
 				continue
 			}
@@ -198,6 +189,7 @@ func resolveDuplicateCourseIDs(courses []map[string]interface{}) []map[string]in
 			for i := 1; i < len(coursesGroup); i++ {
 				mergeCourseSchedule(first, coursesGroup[i])
 			}
+			first["id"] = genCourseHash(first)
 			processed = append(processed, first)
 		}
 	}
@@ -207,8 +199,7 @@ func resolveDuplicateCourseIDs(courses []map[string]interface{}) []map[string]in
 
 func convertCourse(c map[string]interface{}) map[string]interface{} {
 	rawID := safeString(c["kch"], "")
-	return map[string]interface{}{
-		"id":       rawID,
+	course := map[string]interface{}{
 		"rawId":    rawID,
 		"name":     safeString(c["courseName"], ""),
 		"location": cleanLocation(safeString(c["location"], "")),
@@ -216,4 +207,6 @@ func convertCourse(c map[string]interface{}) map[string]interface{} {
 		"weeks":    parseWeeks(safeString(c["classWeekDetails"], "")),
 		"schedule": parseClassTime(safeString(c["classTime"], "")),
 	}
+	course["id"] = genCourseHash(course)
+	return course
 }
