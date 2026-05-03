@@ -3,7 +3,6 @@ package cache
 import (
 	"sync"
 	"time"
-	"xykcb_server/internal/metrics"
 )
 
 type TokenCache struct {
@@ -93,7 +92,7 @@ func (c *TokenCache) cleanup() {
 
 	now := time.Now()
 	for key, entry := range c.entries {
-		if now.After(entry.expires) {
+		if !entry.expires.After(now) {
 			delete(c.entries, key)
 		}
 	}
@@ -121,32 +120,15 @@ func (c *TokenCache) evictOldest() {
 	}
 }
 
-func (c *TokenCache) GetAllEntries() map[string]struct{} {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	result := make(map[string]struct{}, len(c.entries))
-	for key := range c.entries {
-		result[key] = struct{}{}
-	}
-	return result
-}
-
 var tokenCache = NewTokenCache(5*time.Minute, 10000)
-
-func GetTokenCache() *TokenCache {
-	return tokenCache
-}
 
 func GetToken(providerKey, account, password string, loginFunc func(account, password string) (string, error)) (string, error) {
 	key := providerKey + ":" + account
 
 	if token, ok := tokenCache.Get(key); ok {
-		metrics.RecordTokenCacheHit()
 		return token, nil
 	}
 
-	metrics.RecordTokenCacheMiss()
 	token, err := loginFunc(account, password)
 	if err != nil {
 		return "", err

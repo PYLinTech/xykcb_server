@@ -4,6 +4,11 @@ $env:GOSUMDB="off"
 Write-Host "正在配置依赖..."
 go mod tidy
 
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "配置依赖失败"
+    exit 1
+}
+
 Write-Host "正在编译..."
 go build -o xykcb_server.exe .\cmd\server
 

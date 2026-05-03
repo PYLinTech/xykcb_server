@@ -29,16 +29,28 @@ func (h *CourseHandler) error(w http.ResponseWriter, r *http.Request, err *error
 	writeError(w, r, err)
 }
 
-func (h *CourseHandler) HandleCourse(w http.ResponseWriter, r *http.Request) {
+func (h *CourseHandler) requireGet(w http.ResponseWriter, r *http.Request) bool {
 	if r.Method == http.MethodOptions {
-		return
+		return false
 	}
 	if r.Method != http.MethodGet {
 		h.error(w, r, errors.GetError("005"))
+		return false
+	}
+	return true
+}
+
+func readCredentials(r *http.Request) (school, account, password string) {
+	q := r.URL.Query()
+	return q.Get("school"), q.Get("account"), q.Get("password")
+}
+
+func (h *CourseHandler) HandleCourse(w http.ResponseWriter, r *http.Request) {
+	if !h.requireGet(w, r) {
 		return
 	}
 
-	school, account, password := r.URL.Query().Get("school"), r.URL.Query().Get("account"), r.URL.Query().Get("password")
+	school, account, password := readCredentials(r)
 	if school == "" || account == "" || password == "" {
 		h.error(w, r, errors.GetError("001"))
 		return
@@ -50,15 +62,12 @@ func (h *CourseHandler) HandleCourse(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CourseHandler) HandleCourseGrades(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodOptions {
-		return
-	}
-	if r.Method != http.MethodGet {
-		h.error(w, r, errors.GetError("005"))
+	if !h.requireGet(w, r) {
 		return
 	}
 
-	school, account, password, semester := r.URL.Query().Get("school"), r.URL.Query().Get("account"), r.URL.Query().Get("password"), r.URL.Query().Get("semester")
+	school, account, password := readCredentials(r)
+	semester := r.URL.Query().Get("semester")
 	if school == "" || account == "" || password == "" {
 		h.error(w, r, errors.GetError("001"))
 		return
@@ -70,15 +79,11 @@ func (h *CourseHandler) HandleCourseGrades(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *CourseHandler) HandleGuidanceTeaching(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodOptions {
-		return
-	}
-	if r.Method != http.MethodGet {
-		h.error(w, r, errors.GetError("005"))
+	if !h.requireGet(w, r) {
 		return
 	}
 
-	school, account, password := r.URL.Query().Get("school"), r.URL.Query().Get("account"), r.URL.Query().Get("password")
+	school, account, password := readCredentials(r)
 	if school == "" || account == "" || password == "" {
 		h.error(w, r, errors.GetError("001"))
 		return
@@ -123,22 +128,14 @@ func (h *CourseHandler) handleSchoolRequest(w http.ResponseWriter, r *http.Reque
 }
 
 func (h *CourseHandler) GetSupportedSchools(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodOptions {
-		return
-	}
-	if r.Method != http.MethodGet {
-		h.error(w, r, errors.GetError("005"))
+	if !h.requireGet(w, r) {
 		return
 	}
 	h.json(w, r, http.StatusOK, map[string]interface{}{"success": true, "data": h.registry.ListAll()})
 }
 
 func (h *CourseHandler) GetSupportFunctions(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodOptions {
-		return
-	}
-	if r.Method != http.MethodGet {
-		h.error(w, r, errors.GetError("005"))
+	if !h.requireGet(w, r) {
 		return
 	}
 

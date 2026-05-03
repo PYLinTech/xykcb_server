@@ -1,13 +1,14 @@
 package config
 
 import (
+	"encoding/json"
 	"log"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/spf13/viper"
 )
 
 type ServerConfig struct {
@@ -41,9 +42,18 @@ type SemesterConfig struct {
 	MergeableSections []string   `json:"mergeableSections"`
 }
 
+type SemesterConfigFrom struct {
+	From              string     `json:"from"`
+	TotalWeeks        int        `json:"totalWeeks"`
+	TimeSlots         []TimeSlot `json:"timeSlots"`
+	MergeableSections []string   `json:"mergeableSections"`
+}
+
 type SchoolSemesters struct {
-	Semesters map[string]SemesterConfig `json:"semesters"`
-	Functions interface{}               `json:"functions"`
+	Semesters          map[string]SemesterConfig `json:"semesters"`
+	SemesterConfigTTL  int                       `json:"semesterConfigTTL"`
+	SemesterConfigFrom []SemesterConfigFrom      `json:"semesterConfigFrom"`
+	Functions          interface{}               `json:"functions"`
 }
 
 type SchoolConfig map[string]SchoolSemesters
@@ -55,8 +65,6 @@ type fileCache struct {
 }
 
 var (
-	serverV      *viper.Viper
-	schoolV      *viper.Viper
 	serverCfg    *Config
 	schoolCfg    SchoolConfig
 	NotFoundHTML []byte
@@ -67,18 +75,16 @@ var (
 )
 
 func LoadConfig() (*Config, error) {
-	serverV = viper.New()
-	serverV.SetConfigName("config")
-	serverV.AddConfigPath("assets")
-	serverV.SetConfigType("json")
-
-	if err := serverV.ReadInConfig(); err != nil {
+	data, err := os.ReadFile("assets/config.json")
+	if err != nil {
 		return nil, err
 	}
 
-	if err := serverV.Unmarshal(&serverCfg); err != nil {
+	var cfg Config
+	if err := json.Unmarshal(data, &cfg); err != nil {
 		return nil, err
 	}
+	serverCfg = &cfg
 
 	if serverCfg.Server.Port == "" {
 		serverCfg.Server.Port = "8080"
@@ -105,15 +111,15 @@ func LoadNotFoundHTML() error {
 }
 
 func LoadSchoolConfig() error {
-	schoolV = viper.New()
-	schoolV.SetConfigName("school_config")
-	schoolV.AddConfigPath("assets")
-	schoolV.SetConfigType("json")
-
-	if err := schoolV.ReadInConfig(); err != nil {
+	data, err := os.ReadFile("assets/school_config.json")
+	if err != nil {
 		return err
 	}
-	schoolV.Unmarshal(&schoolCfg)
+	var cfg SchoolConfig
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		return err
+	}
+	schoolCfg = cfg
 	updateCache("assets/school_config.json", &schoolCache)
 	return nil
 }
@@ -158,16 +164,16 @@ func WatchAssets(onConfigChange, onSchoolChange, onNotFoundChange func()) {
 			select {
 			case event := <-watcher.Events:
 				if event.Op&fsnotify.Write == fsnotify.Write {
-					switch event.Name {
-					case "assets/404.html":
+					switch filepath.Base(event.Name) {
+					case "404.html":
 						if checkChange(event.Name, &notFoundCache) {
 							loadAndNotify(LoadNotFoundHTML, onNotFoundChange)
 						}
-					case "assets/config.json":
+					case "config.json":
 						if checkChange(event.Name, &configCache) {
 							onConfigChange()
 						}
-					case "assets/school_config.json":
+					case "school_config.json":
 						if checkChange(event.Name, &schoolCache) {
 							onSchoolChange()
 						}

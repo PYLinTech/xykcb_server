@@ -37,10 +37,6 @@ func GetError(code string) *AppError {
 	return &AppError{Code: code, Message: "未知错误", Status: http.StatusInternalServerError}
 }
 
-func New(code, message string, status int) *AppError {
-	return &AppError{Code: code, Message: message, Status: status}
-}
-
 func Wrap(err error, code string) *AppError {
 	if err == nil {
 		return nil

@@ -17,7 +17,7 @@ echo "正在编译..."
 go build -o xykcb_server ./cmd/server
 
 if [ $? -eq 0 ]; then
-    echo "编译完成：$(pwd)/xykcb_server"
+    echo "编译完成: $(pwd)/xykcb_server"
 else
     echo "编译失败"
     exit 1

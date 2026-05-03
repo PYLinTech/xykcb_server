@@ -1,11 +1,6 @@
 package provider
 
-import (
-	"log"
-
-	"xykcb_server/internal/config"
-	"xykcb_server/internal/model"
-)
+import "xykcb_server/internal/model"
 
 type SchoolProvider interface {
 	GetSchoolId() string
@@ -20,12 +15,6 @@ type Registry struct {
 }
 
 var defaultRegistry = &Registry{providers: make(map[string]SchoolProvider)}
-
-func init() {
-	if err := config.LoadSchoolConfig(); err != nil {
-		log.Printf("加载学校配置失败: %v", err)
-	}
-}
 
 func Default() *Registry { return defaultRegistry }
 
