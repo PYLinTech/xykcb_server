@@ -71,20 +71,9 @@ func nn(v string) string {
 	return v
 }
 
-func weeksJoin(weeks []int) string {
-	if len(weeks) == 0 {
-		return ""
-	}
-	sorted := append([]int(nil), weeks...)
-	sort.Ints(sorted)
-	parts := make([]string, 0, len(sorted))
-	for _, w := range sorted {
-		parts = append(parts, strconv.Itoa(w))
-	}
-	return strings.Join(parts, ",")
-}
-
-func intSliceToString(vals []int) string {
+func joinSortedInts(vals []int) string {
+	vals = append([]int(nil), vals...)
+	sort.Ints(vals)
 	parts := make([]string, len(vals))
 	for i, v := range vals {
 		parts[i] = strconv.Itoa(v)
@@ -122,8 +111,9 @@ func (r tsvTermsRow) toLine() string {
 
 func writeTermsRow(sb *strings.Builder, row tsvTermsRow, prev *tsvTermsRow, first bool) {
 	if first {
-		row.startDate = nn(row.startDate)
-		sb.WriteString(row.toLine())
+		out := row
+		out.startDate = nn(row.startDate)
+		sb.WriteString(out.toLine())
 		sb.WriteByte('\n')
 		*prev = row
 		return
@@ -215,14 +205,13 @@ func (r tsvCourseRow) toLine() string {
 }
 
 func makeCourseRow(semesterID, rawID, courseName, location, teacher, rawWeeksStr, wd, sectionsStr string) tsvCourseRow {
-	weeksStr := nn(rawWeeksStr)
 	row := tsvCourseRow{
 		termID:   semesterID,
 		rawID:    nn(rawID),
 		name:     nn(courseName),
 		location: nn(location),
 		teacher:  nn(teacher),
-		weeks:    weeksStr,
+		weeks:    nn(rawWeeksStr),
 		weekday:  nn(wd),
 		sections: nn(sectionsStr),
 	}
@@ -276,30 +265,23 @@ func buildCoursesTSV(semesterIDs []string, semesters map[string]semData) string 
 
 	for _, semesterID := range semesterIDs {
 		for _, course := range semesters[semesterID].courses {
-			rawID := safeString(course["rawId"], "")
-			courseName := safeString(course["name"], "")
-			location := safeString(course["location"], "")
-			teacher := safeString(course["teacher"], "")
-			rawWeeksStr := weeksJoin(getIntSliceField(course, "weeks"))
+			rawWeeksStr := joinSortedInts(course.Weeks)
 
-			schedule := getScheduleField(course)
-			if len(schedule) == 0 {
-				row := makeCourseRow(semesterID, rawID, courseName, location, teacher, rawWeeksStr, "", "")
+			if len(course.Schedule) == 0 {
+				row := makeCourseRow(semesterID, course.RawID, course.Name, course.Location, course.Teacher, rawWeeksStr, "", "")
 				writeCourseRow(&sb, row, &prev, first)
 				first = false
 				continue
 			}
 
-			weekdays := make([]string, 0, len(schedule))
-			for wd := range schedule {
+			weekdays := make([]string, 0, len(course.Schedule))
+			for wd := range course.Schedule {
 				weekdays = append(weekdays, wd)
 			}
 			sort.Strings(weekdays)
 
 			for _, wd := range weekdays {
-				sections := schedule[wd]
-				sort.Ints(sections)
-				row := makeCourseRow(semesterID, rawID, courseName, location, teacher, rawWeeksStr, wd, intSliceToString(sections))
+				row := makeCourseRow(semesterID, course.RawID, course.Name, course.Location, course.Teacher, rawWeeksStr, wd, joinSortedInts(course.Schedule[wd]))
 				writeCourseRow(&sb, row, &prev, first)
 				first = false
 			}
@@ -311,7 +293,7 @@ func buildCoursesTSV(semesterIDs []string, semesters map[string]semData) string 
 
 type semData struct {
 	cfg     config.SemesterConfig
-	courses []map[string]interface{}
+	courses []courseRecord
 }
 
 func generateCourseTSV(schoolID string, data map[string]semData) string {

@@ -9,6 +9,8 @@ import (
 	"xykcb_server/internal/provider"
 )
 
+type schoolProviderCall func(provider.SchoolProvider, string, string) (*model.CourseResponse, error)
+
 type CourseHandler struct {
 	registry *provider.Registry
 }
@@ -45,6 +47,31 @@ func readCredentials(r *http.Request) (school, account, password string) {
 	return q.Get("school"), q.Get("account"), q.Get("password")
 }
 
+func (h *CourseHandler) callSchoolProvider(w http.ResponseWriter, school, account, password string, call schoolProviderCall) (*model.CourseResponse, bool) {
+	p, ok := h.registry.Get(school)
+	if !ok {
+		h.error(w, errors.GetError("002"))
+		return nil, false
+	}
+
+	resp, err := call(p, account, password)
+	if err != nil {
+		h.error(w, errors.Wrap(err, "004"))
+		return nil, false
+	}
+
+	if resp == nil || !resp.Success {
+		descKey := "004"
+		if resp != nil {
+			descKey = resp.DescKey
+		}
+		h.error(w, errors.GetError(descKey))
+		return nil, false
+	}
+
+	return resp, true
+}
+
 func (h *CourseHandler) HandleCourse(w http.ResponseWriter, r *http.Request) {
 	if !h.requireGet(w, r) {
 		return
@@ -56,24 +83,10 @@ func (h *CourseHandler) HandleCourse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p, ok := h.registry.Get(school)
+	resp, ok := h.callSchoolProvider(w, school, account, password, func(p provider.SchoolProvider, account, password string) (*model.CourseResponse, error) {
+		return p.Login(account, password)
+	})
 	if !ok {
-		h.error(w, errors.GetError("002"))
-		return
-	}
-
-	resp, err := p.Login(account, password)
-	if err != nil {
-		h.error(w, errors.Wrap(err, "004"))
-		return
-	}
-
-	if resp == nil || !resp.Success {
-		descKey := "004"
-		if resp != nil {
-			descKey = resp.DescKey
-		}
-		h.error(w, errors.GetError(descKey))
 		return
 	}
 
@@ -98,9 +111,14 @@ func (h *CourseHandler) HandleCourseGrades(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	h.handleSchoolRequest(w, r, school, account, password, &semester, func(p provider.SchoolProvider, account, password string, semester string) (*model.CourseResponse, error) {
+	resp, ok := h.callSchoolProvider(w, school, account, password, func(p provider.SchoolProvider, account, password string) (*model.CourseResponse, error) {
 		return p.GetGrades(account, password, semester)
 	})
+	if !ok {
+		return
+	}
+
+	h.json(w, http.StatusOK, resp)
 }
 
 func (h *CourseHandler) HandleGuidanceTeaching(w http.ResponseWriter, r *http.Request) {
@@ -114,38 +132,10 @@ func (h *CourseHandler) HandleGuidanceTeaching(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	h.handleSchoolRequest(w, r, school, account, password, nil, func(p provider.SchoolProvider, account, password string, semester string) (*model.CourseResponse, error) {
+	resp, ok := h.callSchoolProvider(w, school, account, password, func(p provider.SchoolProvider, account, password string) (*model.CourseResponse, error) {
 		return p.GetGuidanceTeaching(account, password)
 	})
-}
-
-func (h *CourseHandler) handleSchoolRequest(w http.ResponseWriter, r *http.Request, school, account, password string, semester *string, handler func(provider.SchoolProvider, string, string, string) (*model.CourseResponse, error)) {
-	p, ok := h.registry.Get(school)
 	if !ok {
-		h.error(w, errors.GetError("002"))
-		return
-	}
-
-	var resp *model.CourseResponse
-	var err error
-
-	if semester != nil && *semester != "" {
-		resp, err = handler(p, account, password, *semester)
-	} else {
-		resp, err = handler(p, account, password, "")
-	}
-
-	if err != nil {
-		h.error(w, errors.Wrap(err, "004"))
-		return
-	}
-
-	if resp == nil || !resp.Success {
-		descKey := "004"
-		if resp != nil {
-			descKey = resp.DescKey
-		}
-		h.error(w, errors.GetError(descKey))
 		return
 	}
 

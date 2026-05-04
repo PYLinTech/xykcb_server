@@ -199,7 +199,7 @@ func (s *HnitA) getSemesterConfigs(account, password, token string, schoolCfg *c
 	}
 
 	semesters := make(map[string]config.SemesterConfig, len(semesterIDs))
-	var allStartsResolved bool = true
+	allStartsResolved := true
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 

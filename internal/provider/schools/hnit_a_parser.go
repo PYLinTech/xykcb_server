@@ -40,50 +40,38 @@ func parseWeeks(wd string) []int {
 	return weeks
 }
 
-func getStringField(course map[string]interface{}, key string) string {
-	return safeString(course[key], "")
+type courseRecord struct {
+	RawID    string
+	Name     string
+	Location string
+	Teacher  string
+	Weeks    []int
+	Schedule map[string][]int
 }
 
-func getIntSliceField(course map[string]interface{}, key string) []int {
-	values, ok := course[key].([]int)
-	if !ok {
-		return nil
+func convertCourse(c map[string]interface{}) courseRecord {
+	return courseRecord{
+		RawID:    safeString(c["kch"], ""),
+		Name:     safeString(c["courseName"], ""),
+		Location: cleanLocation(safeString(c["location"], "")),
+		Teacher:  safeString(c["teacherName"], ""),
+		Weeks:    parseWeeks(safeString(c["classWeekDetails"], "")),
+		Schedule: parseClassTime(safeString(c["classTime"], "")),
 	}
-	return values
 }
 
-func getScheduleField(course map[string]interface{}) map[string][]int {
-	schedule, ok := course["schedule"].(map[string][]int)
-	if !ok {
-		return nil
-	}
-	return schedule
-}
-
-func orderByRawID(courses []map[string]interface{}) []map[string]interface{} {
-	idMap := make(map[string][]map[string]interface{})
-	idOrder := make([]string, 0)
+func stableGroupByRawID(courses []courseRecord) []courseRecord {
+	idMap := make(map[string][]courseRecord)
+	idOrder := make([]string, 0, len(courses))
 	for _, course := range courses {
-		id := getStringField(course, "rawId")
-		if _, ok := idMap[id]; !ok {
-			idOrder = append(idOrder, id)
+		if _, ok := idMap[course.RawID]; !ok {
+			idOrder = append(idOrder, course.RawID)
 		}
-		idMap[id] = append(idMap[id], course)
+		idMap[course.RawID] = append(idMap[course.RawID], course)
 	}
-	result := make([]map[string]interface{}, 0, len(courses))
+	result := make([]courseRecord, 0, len(courses))
 	for _, id := range idOrder {
 		result = append(result, idMap[id]...)
 	}
 	return result
-}
-
-func convertCourse(c map[string]interface{}) map[string]interface{} {
-	return map[string]interface{}{
-		"rawId":    safeString(c["kch"], ""),
-		"name":     safeString(c["courseName"], ""),
-		"location": cleanLocation(safeString(c["location"], "")),
-		"teacher":  safeString(c["teacherName"], ""),
-		"weeks":    parseWeeks(safeString(c["classWeekDetails"], "")),
-		"schedule": parseClassTime(safeString(c["classTime"], "")),
-	}
 }

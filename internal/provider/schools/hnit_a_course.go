@@ -42,7 +42,7 @@ func (s *HnitA) Login(account, password string) (*model.CourseResponse, error) {
 				return
 			}
 
-			var courses []map[string]interface{}
+			var courses []courseRecord
 			if semesterData, ok := curriculumData["data"].([]interface{}); ok {
 				for _, item := range semesterData {
 					if courseList, ok := item.(map[string]interface{})["item"].([]interface{}); ok {
@@ -54,7 +54,7 @@ func (s *HnitA) Login(account, password string) (*model.CourseResponse, error) {
 					}
 				}
 			}
-			courses = orderByRawID(courses)
+			courses = stableGroupByRawID(courses)
 
 			mu.Lock()
 			collected[semesterID] = semData{cfg: semesterConfig, courses: courses}
