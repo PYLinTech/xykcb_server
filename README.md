@@ -12,7 +12,7 @@ Contact: PYLinTech@163.com
 
 | 功能 | 说明 |
 |------|------|
-| 课程数据 | 获取 HNIT 移动端课表数据，并输出统一课程结构 |
+| 课程数据 | 获取 HNIT 移动端课表数据，输出 TSV 格式课程表 |
 | 成绩查询 | 获取 HNIT 成绩和学期列表 |
 | 培养方案 | 获取 HNIT 专业教学计划课程 |
 | 学期配置 | 支持从远程第 2 周日期动态计算学期开始日 |
@@ -58,7 +58,9 @@ go build -o xykcb_server.exe ./cmd/server
 
 ## API
 
-所有 API 使用 `GET`，错误响应统一为：
+### 响应格式
+
+除 `/get-course-data` 外，其余接口统一返回 JSON：
 
 ```json
 {
@@ -67,12 +69,12 @@ go build -o xykcb_server.exe ./cmd/server
 }
 ```
 
-成功响应统一为：
+`/get-course-data` 成功时 `data` 为 TSV 字符串：
 
 ```json
 {
   "success": true,
-  "data": {}
+  "data": "@terms\nschool_id\tterm_id\t..."
 }
 ```
 
@@ -80,15 +82,11 @@ go build -o xykcb_server.exe ./cmd/server
 
 | desc_key | HTTP 状态码 | 说明 |
 |----------|-------------|------|
-| 001 | 400 | 缺少必要参数 |
+| 001 | 400 | 请求参数错误 |
 | 002 | 404 | 不支持的学校 |
 | 003 | 401 | 账户或密码错误 |
 | 004 | 500 | 服务器内部错误 |
-| 005 | 405 | 不支持的 HTTP 方法 |
-| 006 | 500 | 获取数据失败 |
-| 007 | 504 | 请求超时或功能未实现 |
-| 008 | 401 | Token 已过期 |
-| 009 | 429 | 频率超限 |
+| 005 | 429 | 频率超限 |
 
 ### 获取支持学校
 
@@ -122,48 +120,62 @@ GET /get-support-function?school=hnit_a
 GET /get-course-data?school=hnit_a&account=<account>&password=<password>
 ```
 
-HNIT 课程输出结构：
+返回 TSV 格式课程表，包含两个表段：`@terms` 学期与节次配置、`@courses` 课程时段明细。
 
-```json
-{
-  "success": true,
-  "data": {
-    "2024-2025-2": {
-      "semesterStart": "2025-02-17",
-      "totalWeeks": 20,
-      "timeSlots": [
-        {"section": 1, "start": "08:30", "end": "09:15"}
-      ],
-      "mergeableSections": ["1-2", "3-4"],
-      "courses": [
-        {
-          "id": "f2a3x",
-          "rawId": "F0233264",
-          "name": "计算机组成原理",
-          "location": "1501",
-          "teacher": "廖细生",
-          "weeks": [2, 3, 4, 5, 7, 8, 9, 10, 11],
-          "schedule": {"2": [7, 8]}
-        }
-      ]
-    }
-  }
-}
+TSV 通用规则：
+- 空白单元格表示继承上一行同列还原后的值
+- `\N` 表示真正的空值
+- `c_hash` 由所有字段的还原后完整值计算 MurmurHash3 32-bit → Base36 左补 0 至 8 位
+- 任一课程时段字段不同则必须单独一行
+
+#### @terms — 学期与节次配置
+
+| 字段 | 说明 |
+|------|------|
+| school_id | 学校 ID |
+| term_id | 学期 ID |
+| total_weeks | 总周数 |
+| start_date | 第 1 周周一日期，ISO 格式 |
+| period_group | 大节编号 |
+| section_no | 小节编号 |
+| section_start_time | 小节开始时间 |
+| section_end_time | 小节结束时间 |
+
+#### @courses — 课程时段明细
+
+| 字段 | 说明 |
+|------|------|
+| c_hash | 课程时段哈希 ID |
+| term_id | 学期 ID，关联 @terms.term_id |
+| raw_id | 原始课程 ID |
+| course_name | 课程名 |
+| location | 地点 |
+| teacher | 教师 |
+| weeks | 上课周次，逗号分隔数字 |
+| weekday | 星期，1-7，1 为周一 |
+| sections | 节次，逗号分隔数字 |
+
+响应示例：
+
+```
+@terms
+school_id	term_id	total_weeks	start_date	period_group	section_no	section_start_time	section_end_time
+hnit_a	2024-2025-2	20	2025-02-17	1	1	08:30	09:15
+					2	09:20	10:05
+				2	3	10:25	11:10
+					4	11:15	12:00
+	2025-2026-1		2025-09-01	1	1	08:30	09:15
+					2	09:20	10:05
+
+@courses
+c_hash	term_id	raw_id	course_name	location	teacher	weeks	weekday	sections
+01e6y2go	2024-2025-2	F0233264	计算机组成原理	1501	T001	2,3,4,5,7,8,9,10,11	2	7,8
+00r2k7sc		B0101114	思想政治理论课（一）	2604	T002	2,3,4,5,7,8,9,10,11,12	\N	3,4
+01abcdef						3	1,2
+00ghijkl	2025-2026-1	F0170514	软件工程	2611	T010	2,3,4,5,6,7,8,9,10,11,12,13	4	1,2
 ```
 
-课程字段说明：
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | string | 服务端生成的 hash 课程唯一标识 |
-| rawId | string | 学校接口返回的原始课程号 |
-| name | string | 课程名称 |
-| location | string | 上课地点，已移除括号备注 |
-| teacher | string | 教师 |
-| weeks | number[] | 上课周次 |
-| schedule | object | 星期到节次数组的映射，`1` 为周一，`7` 为周日 |
-
-`id` 始终由服务端生成，不沿用学校原始课程号。生成依据包含 `rawId`、课程名称、地点、教师和排序去重后的周次集合；`rawId` 用于保留学校接口返回的原始课程号。
+`c_hash` 计算规则：对 `term_id`、`raw_id`、`course_name`、`location`、`teacher`、`weeks`、`weekday`、`sections` 的还原后完整值用 `\t` 拼接，计算 MurmurHash3 32-bit（seed=0），结果转 Base36 字符串左补 0 至 8 位。`\N` 参与计算前还原为空字符串。
 
 ### 获取成绩
 
@@ -211,14 +223,23 @@ GET /get-guidance-teaching?school=hnit_a&account=<account>&password=<password>
 ```json
 {
   "hnit_a": {
-    "semesterConfigTTL": 2592000,
+    "semesterConfigTTL": 86400,
     "semesterConfigFrom": [
       {
         "from": "2024-2025-2",
         "totalWeeks": 20,
-        "mergeableSections": ["1-2", "3-4"],
+        "mergeableSections": ["1-2", "3-4", "5-6", "7-8", "9-10"],
         "timeSlots": [
-          {"section": 1, "start": "08:30", "end": "09:15"}
+          {"section": 1, "start": "08:30", "end": "09:15"},
+          {"section": 2, "start": "09:20", "end": "10:05"},
+          {"section": 3, "start": "10:25", "end": "11:10"},
+          {"section": 4, "start": "11:15", "end": "12:00"},
+          {"section": 5, "start": "14:00", "end": "14:45"},
+          {"section": 6, "start": "14:50", "end": "15:35"},
+          {"section": 7, "start": "15:55", "end": "16:40"},
+          {"section": 8, "start": "16:45", "end": "17:30"},
+          {"section": 9, "start": "19:00", "end": "19:45"},
+          {"section": 10, "start": "19:50", "end": "20:35"}
         ]
       }
     ],
@@ -235,7 +256,7 @@ GET /get-guidance-teaching?school=hnit_a&account=<account>&password=<password>
 | semesterConfigFrom | 分段共享的学期配置列表 |
 | from | 从该学期开始使用当前配置，比较时按去掉 `-` 后的数字排序 |
 | totalWeeks | 学期总周数 |
-| mergeableSections | 可合并节次 |
+| mergeableSections | 可合并节次，用于派生 TSV `period_group` |
 | timeSlots | 每节课起止时间 |
 | functions | 学校功能入口配置 |
 

@@ -22,9 +22,10 @@ func (s *HnitA) Login(account, password string) (*model.CourseResponse, error) {
 		return s.error(""), nil
 	}
 
-	result := make(map[string]interface{})
+	collected := make(map[string]semData)
 	var mu sync.Mutex
 	var wg sync.WaitGroup
+	var failCount int
 
 	for semesterID, semesterConfig := range semesterConfigs {
 		wg.Add(1)
@@ -35,6 +36,9 @@ func (s *HnitA) Login(account, password string) (*model.CourseResponse, error) {
 				return schoolClient.Get(path)
 			})
 			if err != nil || curriculumData == nil {
+				mu.Lock()
+				failCount++
+				mu.Unlock()
 				return
 			}
 
@@ -50,21 +54,20 @@ func (s *HnitA) Login(account, password string) (*model.CourseResponse, error) {
 					}
 				}
 			}
-			courses = resolveDuplicateCourseIDs(courses)
+			courses = orderByRawID(courses)
 
 			mu.Lock()
-			result[semesterID] = map[string]interface{}{
-				"semesterStart":     semesterConfig.SemesterStart,
-				"totalWeeks":        semesterConfig.TotalWeeks,
-				"timeSlots":         semesterConfig.TimeSlots,
-				"mergeableSections": semesterConfig.MergeableSections,
-				"courses":           courses,
-			}
+			collected[semesterID] = semData{cfg: semesterConfig, courses: courses}
 			mu.Unlock()
 		}(semesterID, semesterConfig)
 	}
 
 	wg.Wait()
 
-	return &model.CourseResponse{Success: true, Data: result}, nil
+	if len(collected) == 0 && failCount > 0 {
+		return s.error(""), nil
+	}
+
+	tsv := generateCourseTSV(s.GetProviderKey(), collected)
+	return &model.CourseResponse{Success: true, Data: tsv}, nil
 }

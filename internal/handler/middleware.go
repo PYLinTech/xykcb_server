@@ -117,8 +117,8 @@ func RateLimiterMiddleware(requests int, window time.Duration) Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ip := getClientIP(r)
 			if !rl.allow(ip) {
-				err := errors.GetError("009")
-				writeError(w, r, err)
+				err := errors.GetError("005")
+				writeError(w, err)
 				return
 			}
 			next.ServeHTTP(w, r)
@@ -139,7 +139,7 @@ func getClientIP(r *http.Request) string {
 	return r.RemoteAddr
 }
 
-func writeError(w http.ResponseWriter, r *http.Request, err *errors.AppError) {
+func writeError(w http.ResponseWriter, err *errors.AppError) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(err.Status)
 	json.NewEncoder(w).Encode(model.CourseResponse{Success: false, DescKey: err.Code})

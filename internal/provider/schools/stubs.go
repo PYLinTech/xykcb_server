@@ -24,9 +24,9 @@ func (s *stubSchool) Login(account, password string) (*model.CourseResponse, err
 }
 
 func (s *stubSchool) GetGrades(account, password, semester string) (*model.CourseResponse, error) {
-	return &model.CourseResponse{Success: false, DescKey: "007"}, nil
+	return &model.CourseResponse{Success: false, DescKey: "004"}, nil
 }
 
 func (s *stubSchool) GetGuidanceTeaching(account, password string) (*model.CourseResponse, error) {
-	return &model.CourseResponse{Success: false, DescKey: "007"}, nil
+	return &model.CourseResponse{Success: false, DescKey: "004"}, nil
 }

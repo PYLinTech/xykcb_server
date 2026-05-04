@@ -199,29 +199,43 @@ func (s *HnitA) getSemesterConfigs(account, password, token string, schoolCfg *c
 	}
 
 	semesters := make(map[string]config.SemesterConfig, len(semesterIDs))
-	allStartsResolved := true
+	var allStartsResolved bool = true
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
 	for _, semesterID := range semesterIDs {
 		rule := selectSemesterConfigFrom(semesterID, schoolCfg.SemesterConfigFrom)
 		if rule == nil {
 			continue
 		}
 
-		semesterStart, err := s.getSemesterStart(account, password, token, semesterID)
-		if err != nil {
-			log.Printf("hnit_a semester config: failed to calculate semesterStart for %s: %v", semesterID, err)
-			allStartsResolved = false
-			if cached, ok := hnitASemesterCache.semesters[semesterID]; ok {
-				semesterStart = cached.SemesterStart
-			}
-		}
+		wg.Add(1)
+		go func(sid string, r config.SemesterConfigFrom) {
+			defer wg.Done()
 
-		semesters[semesterID] = config.SemesterConfig{
-			SemesterStart:     semesterStart,
-			TotalWeeks:        rule.TotalWeeks,
-			TimeSlots:         rule.TimeSlots,
-			MergeableSections: rule.MergeableSections,
-		}
+			semesterStart, err := s.getSemesterStart(account, password, token, sid)
+			if err != nil {
+				log.Printf("hnit_a semester config: failed to calculate semesterStart for %s: %v", sid, err)
+				mu.Lock()
+				allStartsResolved = false
+				mu.Unlock()
+				if cached, ok := hnitASemesterCache.semesters[sid]; ok {
+					semesterStart = cached.SemesterStart
+				}
+			}
+
+			mu.Lock()
+			semesters[sid] = config.SemesterConfig{
+				SemesterStart:     semesterStart,
+				TotalWeeks:        r.TotalWeeks,
+				TimeSlots:         r.TimeSlots,
+				MergeableSections: r.MergeableSections,
+			}
+			mu.Unlock()
+		}(semesterID, *rule)
 	}
+
+	wg.Wait()
 
 	if len(semesters) == 0 {
 		return cloneSemesterConfigs(hnitASemesterCache.semesters)
