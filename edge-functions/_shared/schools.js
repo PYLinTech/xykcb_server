@@ -2,8 +2,8 @@ export const SCHOOLS = {
   hnit_a: {
     id: "1",
     functions: [
-      { id: "1", url: "/functions/hnit_a/grades.html", "zh-cn": "课程成绩", en: "Course Grades" },
-      { id: "2", url: "/functions/hnit_a/major_plan.html", "zh-cn": "培养计划", en: "Major Plan" },
+      { id: "1", url: "/plugin/hnit_a/grades.html", "zh-cn": "课程成绩", en: "Course Grades" },
+      { id: "2", url: "/plugin/hnit_a/major_plan.html", "zh-cn": "培养计划", en: "Major Plan" },
     ],
     semesterConfigTTL: 86400,
     semesterConfigFrom: [
@@ -29,8 +29,8 @@ export const SCHOOLS = {
   hnit_b: {
     id: "2",
     functions: [
-      { id: "1", url: "https://xykcb.pylin.cn/functions/hnit_b/1.html", "zh-cn": "功能1", en: "function1" },
-      { id: "2", url: "https://xykcb.pylin.cn/functions/hnit_b/2.html", "zh-cn": "功能2", en: "function2" },
+      { id: "1", url: "https://xykcb.pylin.cn/plugin/hnit_b/1.html", "zh-cn": "功能1", en: "function1" },
+      { id: "2", url: "https://xykcb.pylin.cn/plugin/hnit_b/2.html", "zh-cn": "功能2", en: "function2" },
     ],
   },
   hynu: { id: "3", functions: [] },
