@@ -55,6 +55,7 @@
 
 ```text
 edge-functions/
+├── index.js
 ├── [[default]].js
 └── _shared/
     ├── hnit-a.js
