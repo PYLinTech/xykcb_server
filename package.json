@@ -1,0 +1,9 @@
+{
+  "name": "xykcb-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node --check \"edge-functions/[[default]].js\" && node --check edge-functions/_shared/hnit-a.js && node --check edge-functions/_shared/http.js && node --check edge-functions/_shared/not-found.js && node --check edge-functions/_shared/schools.js && node --check edge-functions/_shared/tsv.js"
+  }
+}

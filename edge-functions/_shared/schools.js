@@ -1,0 +1,45 @@
+export const SCHOOLS = {
+  hnit_a: {
+    id: "1",
+    functions: [
+      { id: "1", url: "/functions/hnit_a/grades.html", "zh-cn": "课程成绩", en: "Course Grades" },
+      { id: "2", url: "/functions/hnit_a/major_plan.html", "zh-cn": "培养计划", en: "Major Plan" },
+    ],
+    semesterConfigTTL: 86400,
+    semesterConfigFrom: [
+      {
+        from: "2024-2025-2",
+        totalWeeks: 20,
+        mergeableSections: ["1-2", "3-4", "5-6", "7-8", "9-10"],
+        timeSlots: [
+          { section: 1, start: "08:30", end: "09:15" },
+          { section: 2, start: "09:20", end: "10:05" },
+          { section: 3, start: "10:25", end: "11:10" },
+          { section: 4, start: "11:15", end: "12:00" },
+          { section: 5, start: "14:00", end: "14:45" },
+          { section: 6, start: "14:50", end: "15:35" },
+          { section: 7, start: "15:55", end: "16:40" },
+          { section: 8, start: "16:45", end: "17:30" },
+          { section: 9, start: "19:00", end: "19:45" },
+          { section: 10, start: "19:50", end: "20:35" },
+        ],
+      },
+    ],
+  },
+  hnit_b: {
+    id: "2",
+    functions: [
+      { id: "1", url: "https://xykcb.pylin.cn/functions/hnit_b/1.html", "zh-cn": "功能1", en: "function1" },
+      { id: "2", url: "https://xykcb.pylin.cn/functions/hnit_b/2.html", "zh-cn": "功能2", en: "function2" },
+    ],
+  },
+  hynu: { id: "3", functions: [] },
+  usc: { id: "4", functions: [] },
+};
+
+export function getSupportSchools() {
+  return Object.entries(SCHOOLS).map(([descKey, school]) => ({
+    id: school.id,
+    desc_key: descKey,
+  }));
+}
