@@ -18,8 +18,12 @@ export function error(descKey) {
 export function notFoundHTML() {
   return new Response(NOT_FOUND_HTML, {
     status: 404,
-    headers: { "Content-Type": "text/html; charset=utf-8" },
+    headers: headers({ "Content-Type": "text/html; charset=utf-8" }),
   });
+}
+
+export function preflight() {
+  return new Response(null, { status: 204, headers: headers() });
 }
 
 export function appError(descKey) {
@@ -35,6 +39,15 @@ export function providerError(message) {
 function json(body, status) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json; charset=utf-8" },
+    headers: headers({ "Content-Type": "application/json; charset=utf-8" }),
   });
+}
+
+function headers(extra = {}) {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    ...extra,
+  };
 }

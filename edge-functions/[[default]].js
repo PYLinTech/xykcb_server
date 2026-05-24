@@ -1,5 +1,5 @@
 import { courseData, grades, guidanceTeaching } from "./_shared/hnit-a.js";
-import { error, notFoundHTML, ok } from "./_shared/http.js";
+import { error, notFoundHTML, ok, preflight } from "./_shared/http.js";
 import { getSupportSchools, SCHOOLS } from "./_shared/schools.js";
 
 const routes = new Map([
@@ -12,6 +12,7 @@ const routes = new Map([
 
 export default async function onRequest(context) {
   const request = context.request;
+  if (request.method === "OPTIONS") return preflight();
   if (request.method !== "GET") return error("001");
 
   const url = new URL(request.url);
