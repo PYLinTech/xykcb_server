@@ -738,9 +738,23 @@ func (c *jwHTTPClient) resolve(path string) (string, error) {
 	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
 		return path, nil
 	}
+	if c.baseURL == nil {
+		return "", fmt.Errorf("empty base url")
+	}
 	ref, err := url.Parse(path)
 	if err != nil {
 		return "", err
+	}
+	base := *c.baseURL
+	if strings.HasPrefix(path, "/") {
+		// Android 端是 baseUrl + path 的拼接语义。Go 的 ResolveReference 会把
+		// /login 解析到域名根路径，从而丢掉 /njwhd、/eams 这类 base path。
+		// 这里显式保留 base path，确保 https://jw.hnit.edu.cn/njwhd + /login
+		// 会得到 https://jw.hnit.edu.cn/njwhd/login。
+		base.Path = strings.TrimRight(base.Path, "/") + ref.Path
+		base.RawQuery = ref.RawQuery
+		base.Fragment = ref.Fragment
+		return base.String(), nil
 	}
 	return c.baseURL.ResolveReference(ref).String(), nil
 }
