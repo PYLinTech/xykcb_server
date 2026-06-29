@@ -1,4 +1,4 @@
-xykcb-server
+xykcb_server
 Copyright 2026 Chongqing Peiyulin Technology Co., Ltd. (PYLinTech)
 Contact: PYLinTech@163.com
 
@@ -8,9 +8,9 @@ See the LICENSE file distributed with this work for the full license text.
 This product includes software developed by PYLinTech for the Xiaoyu Course
 Schedule service.
 
-This product is designed to run on Tencent EdgeOne Pages Edge Functions.
-Edge Functions provide the JavaScript Edge Runtime used to execute this
-project's server-side API code.
+This product is designed to run on Tencent EdgeOne Pages Go Cloud Functions.
+Go Cloud Functions provide the Go runtime used to execute this project's
+server-side API code.
 
 No third-party runtime package is bundled by this repository at this time.
 The copyright and license terms of the hosting platform and runtime remain

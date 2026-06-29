@@ -1,6 +1,14 @@
 {
   "name": "xykcb-server",
-  "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "nodeVersion": "22.11.0"
+  "nodeVersion": "22.11.0",
+  "cloudFunctions": {
+    "nodejs": {
+      "includeFiles": [
+        "cloud-functions/ocr_templates.gz"
+      ]
+    },
+    "go": {
+      "maxDuration": 120
+    }
+  }
 }
