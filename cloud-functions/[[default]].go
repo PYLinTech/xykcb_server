@@ -91,7 +91,8 @@ func handleSupportFunctions(r *http.Request) (any, error) {
 	return cfg.Functions, nil
 }
 
-func queryCredentials(q url.Values) (string, string) {
+func queryCredentials(r *http.Request) (string, string) {
+	q := r.URL.Query()
 	account := q.Get("account")
 	if account == "" {
 		account = q.Get("student_ID")
@@ -116,7 +117,7 @@ func handleCourseData(r *http.Request) (any, error) {
 		return nil, appError("002")
 	}
 
-	account, password := queryCredentials(q)
+	account, password := queryCredentials(r)
 	if account == "" || password == "" {
 		return nil, appError("001")
 	}
@@ -157,7 +158,7 @@ func handleCourseData(r *http.Request) (any, error) {
 func handleGrades(r *http.Request) (any, error) {
 	q := r.URL.Query()
 	school := q.Get("school")
-	account, password := queryCredentials(q)
+	account, password := queryCredentials(r)
 	if school == "" || account == "" || password == "" {
 		return nil, appError("001")
 	}
@@ -177,7 +178,7 @@ func handleGrades(r *http.Request) (any, error) {
 func handleGuidanceTeaching(r *http.Request) (any, error) {
 	q := r.URL.Query()
 	school := q.Get("school")
-	account, password := queryCredentials(q)
+	account, password := queryCredentials(r)
 	if school == "" || account == "" || password == "" {
 		return nil, appError("001")
 	}
@@ -228,7 +229,34 @@ func writeNotFound(w http.ResponseWriter) {
 	setCORS(w)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusNotFound)
+	if data, err := readRuntimeAsset("404.html"); err == nil && len(data) > 0 {
+		_, _ = w.Write(data)
+		return
+	}
 	_, _ = w.Write([]byte("<!doctype html><title>404</title><h1>Not Found</h1>"))
+}
+
+func readRuntimeAsset(name string) ([]byte, error) {
+	exeDir := ""
+	if exe, err := os.Executable(); err == nil {
+		exeDir = filepath.Dir(exe)
+	}
+	candidates := []string{
+		name,
+		filepath.Join("cloud-functions", name),
+	}
+	if exeDir != "" {
+		candidates = append(candidates,
+			filepath.Join(exeDir, name),
+			filepath.Join(exeDir, "cloud-functions", name),
+		)
+	}
+	for _, path := range candidates {
+		if data, err := os.ReadFile(path); err == nil && len(data) > 0 {
+			return data, nil
+		}
+	}
+	return nil, os.ErrNotExist
 }
 
 func statusFor(code string) int {
@@ -1142,9 +1170,13 @@ func hasClass(classes, className string) bool {
 }
 
 func attr(attrs, name string) string {
-	quoted := regexp.MustCompile(`(?is)\b` + regexp.QuoteMeta(name) + `\s*=\s*(['"])(.*?)\1`).FindStringSubmatch(attrs)
-	if len(quoted) > 0 {
-		return quoted[2]
+	doubleQuoted := regexp.MustCompile(`(?is)\b` + regexp.QuoteMeta(name) + `\s*=\s*"([^"]*)"`).FindStringSubmatch(attrs)
+	if len(doubleQuoted) > 0 {
+		return doubleQuoted[1]
+	}
+	singleQuoted := regexp.MustCompile(`(?is)\b` + regexp.QuoteMeta(name) + `\s*=\s*'([^']*)'`).FindStringSubmatch(attrs)
+	if len(singleQuoted) > 0 {
+		return singleQuoted[1]
 	}
 	unquoted := regexp.MustCompile(`(?is)\b` + regexp.QuoteMeta(name) + `\s*=\s*([^\s>]+)`).FindStringSubmatch(attrs)
 	if len(unquoted) > 0 {

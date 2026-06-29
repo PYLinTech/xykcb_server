@@ -4,7 +4,8 @@
   "cloudFunctions": {
     "nodejs": {
       "includeFiles": [
-        "cloud-functions/ocr_templates.gz"
+        "cloud-functions/ocr_templates.gz",
+        "404.html"
       ]
     },
     "go": {
