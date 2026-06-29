@@ -9,7 +9,10 @@
       ]
     },
     "go": {
-      "maxDuration": 120
+      "maxDuration": 120,
+      "includeFiles": [
+        "cloud-functions/ocr_templates.gz"
+      ]
     }
   }
 }

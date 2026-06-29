@@ -1809,7 +1809,7 @@ func (c *uscClient) Login() error {
 		}
 		parts := strings.SplitN(strings.TrimSpace(sessRes.Body), "#", 2)
 		if len(parts) != 2 || parts[0] == "" || len(parts[1]) < 20 {
-			continue
+			return appError("004")
 		}
 		encoded, err := encodeSessionLogin(c.account, c.password, parts[0], parts[1])
 		if err != nil {
@@ -2089,20 +2089,82 @@ func readOCRTemplatesFile() ([]byte, error) {
 	if exe, err := os.Executable(); err == nil {
 		exeDir = filepath.Dir(exe)
 	}
-	candidates := []string{
+	wd, _ := os.Getwd()
+	baseNames := []string{
 		"ocr_templates.gz",
 		filepath.Join("cloud-functions", "ocr_templates.gz"),
 	}
-	if exeDir != "" {
-		candidates = append(candidates,
-			filepath.Join(exeDir, "ocr_templates.gz"),
-			filepath.Join(exeDir, "cloud-functions", "ocr_templates.gz"),
-		)
+	searchRoots := uniqueNonEmpty(".", wd, exeDir, filepath.Dir(wd), filepath.Dir(exeDir), "/var/task", "/workspace")
+	candidates := make([]string, 0, len(searchRoots)*len(baseNames))
+	for _, root := range searchRoots {
+		for _, name := range baseNames {
+			candidates = append(candidates, filepath.Join(root, name))
+		}
 	}
 	for _, path := range candidates {
 		if data, err := os.ReadFile(path); err == nil && len(data) > 0 {
 			return data, nil
 		}
+	}
+	for _, root := range searchRoots {
+		if data, err := findOCRTemplatesFile(root); err == nil && len(data) > 0 {
+			return data, nil
+		}
+	}
+	return nil, os.ErrNotExist
+}
+
+func uniqueNonEmpty(values ...string) []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, value := range values {
+		if value == "" || value == "." {
+			value, _ = os.Getwd()
+		}
+		value = filepath.Clean(value)
+		if value == "" || value == string(os.PathSeparator) || value == os.TempDir() || seen[value] {
+			continue
+		}
+		seen[value] = true
+		out = append(out, value)
+	}
+	return out
+}
+
+func findOCRTemplatesFile(root string) ([]byte, error) {
+	if root == "" {
+		return nil, os.ErrNotExist
+	}
+	rootInfo, err := os.Stat(root)
+	if err != nil || !rootInfo.IsDir() {
+		return nil, os.ErrNotExist
+	}
+	root = filepath.Clean(root)
+	var found []byte
+	err = filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+		if err != nil || found != nil {
+			return nil
+		}
+		if d.IsDir() {
+			if path != root && strings.Count(strings.TrimPrefix(path, root), string(os.PathSeparator)) > 3 {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if filepath.Base(path) != "ocr_templates.gz" {
+			return nil
+		}
+		data, readErr := os.ReadFile(path)
+		if readErr == nil && len(data) > 0 {
+			found = data
+		}
+		return nil
+	})
+	if found != nil {
+		return found, nil
+	}
+	if err != nil {
+		return nil, err
 	}
 	return nil, os.ErrNotExist
 }
