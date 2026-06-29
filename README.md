@@ -34,6 +34,7 @@ xykcb_server/
 - `go.mod` 放在 `cloud-functions/` 目录内。
 - `edgeone.json` 使用 `cloudFunctions.go.maxDuration` 设置 Go 函数最大运行时长。
 - 404 页面通过 `go:embed` 从 `cloud-functions/404.html` 编译进 Go 函数，所有未定义路径直接返回这份 HTML。
+- `edgeone.json` 同时 include `cloud-functions/404.html`，兼容 EdgeOne 构建器对运行期文件保留的处理。
 - 南华大学验证码由 Go 代码运行时二值化、分割并识别，不依赖外部模板文件。
 
 ## API 协议
@@ -106,8 +107,16 @@ xykcb_server/
 {
   "name": "xykcb-server",
   "cloudFunctions": {
+    "nodejs": {
+      "includeFiles": [
+        "cloud-functions/404.html"
+      ]
+    },
     "go": {
-      "maxDuration": 120
+      "maxDuration": 120,
+      "includeFiles": [
+        "cloud-functions/404.html"
+      ]
     }
   }
 }
