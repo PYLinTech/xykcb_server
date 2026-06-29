@@ -21,8 +21,6 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -30,12 +28,17 @@ import (
 	"sync"
 	"time"
 
+	_ "embed"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
 )
 
 // ---- [[default]].go ----
+//
+//go:embed 404.html
+var notFoundHTML string
+
 type apiError struct{ DescKey string }
 
 func (e apiError) Error() string { return e.DescKey }
@@ -232,34 +235,7 @@ func writeNotFound(w http.ResponseWriter) {
 	setCORS(w)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusNotFound)
-	if data, err := readRuntimeAsset("404.html"); err == nil && len(data) > 0 {
-		_, _ = w.Write(data)
-		return
-	}
-	_, _ = w.Write([]byte("<!doctype html><title>404</title><h1>Not Found</h1>"))
-}
-
-func readRuntimeAsset(name string) ([]byte, error) {
-	exeDir := ""
-	if exe, err := os.Executable(); err == nil {
-		exeDir = filepath.Dir(exe)
-	}
-	candidates := []string{
-		name,
-		filepath.Join("cloud-functions", name),
-	}
-	if exeDir != "" {
-		candidates = append(candidates,
-			filepath.Join(exeDir, name),
-			filepath.Join(exeDir, "cloud-functions", name),
-		)
-	}
-	for _, path := range candidates {
-		if data, err := os.ReadFile(path); err == nil && len(data) > 0 {
-			return data, nil
-		}
-	}
-	return nil, os.ErrNotExist
+	_, _ = io.WriteString(w, notFoundHTML)
 }
 
 func statusFor(code string) int {
@@ -326,8 +302,8 @@ var schools = map[string]SchoolConfig{
 	"hnit_a": {
 		ID: "1",
 		Functions: []FunctionInfo{
-			{"id": "1", "url": "/functions/hnit_a/grades.html", "zh-cn": "课程成绩", "en": "Course Grades"},
-			{"id": "2", "url": "/functions/hnit_a/major_plan.html", "zh-cn": "培养计划", "en": "Major Plan"},
+			{"id": "1", "url": "/plugin/hnit_a/grades.html", "zh-cn": "课程成绩", "en": "Course Grades"},
+			{"id": "2", "url": "/plugin/hnit_a/major_plan.html", "zh-cn": "培养计划", "en": "Major Plan"},
 		},
 	},
 	"hnit_b": {

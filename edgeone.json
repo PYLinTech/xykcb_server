@@ -2,11 +2,6 @@
   "name": "xykcb-server",
   "nodeVersion": "22.11.0",
   "cloudFunctions": {
-    "nodejs": {
-      "includeFiles": [
-        "404.html"
-      ]
-    },
     "go": {
       "maxDuration": 120
     }
