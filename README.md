@@ -9,7 +9,7 @@
 - 获取课程 TSV 数据
 - 获取成绩
 - 获取培养方案
-- 南华大学验证码模板识别支持
+- 南华大学验证码算法识别支持
 - `hnit_b` 内网场景固定返回不支持码
 
 ## 项目结构
@@ -23,8 +23,7 @@ xykcb_server/
 ├── GitRules.md
 └── cloud-functions/
     ├── go.mod
-    ├── [[default]].go
-    └── ocr_templates.gz
+    └── [[default]].go
 ```
 
 ## EdgeOne Go 约定
@@ -33,10 +32,7 @@ xykcb_server/
 - Go 文件使用 `package handler`，并导出 `Handler(w http.ResponseWriter, r *http.Request)`，签名符合 `http.HandlerFunc`。
 - `go.mod` 放在 `cloud-functions/` 目录内。
 - `edgeone.json` 使用 `cloudFunctions.go.maxDuration` 设置 Go 函数最大运行时长。
-- 南华大学验证码模板文件 `cloud-functions/ocr_templates.gz` 通过 `cloudFunctions.nodejs.includeFiles` 和 `cloudFunctions.go.includeFiles` 保留到函数构建产物中，代码运行时会从函数工作目录、可执行文件目录和常见部署目录查找，避免 `go:embed` 在 EdgeOne 单文件编译流程中找不到资源。
-
-> 当前 EdgeOne 文档把 `includeFiles` 放在 `cloudFunctions.nodejs` 下，但实际构建器会据此复制函数运行期需要读取的文件。本项目保留该字段，因为部署验证已通过，并且这是保留外部 OCR 模板文件的最小侵入方式。
-> 同时保留 `cloudFunctions.go.includeFiles`，用于兼容 Go 构建器支持该字段的部署环境。
+- 南华大学验证码由 Go 代码运行时二值化、分割并识别，不依赖外部模板文件。
 
 ## API 协议
 
@@ -110,14 +106,11 @@ xykcb_server/
   "cloudFunctions": {
     "nodejs": {
       "includeFiles": [
-        "cloud-functions/ocr_templates.gz"
+        "404.html"
       ]
     },
     "go": {
-      "maxDuration": 120,
-      "includeFiles": [
-        "cloud-functions/ocr_templates.gz"
-      ]
+      "maxDuration": 120
     }
   }
 }

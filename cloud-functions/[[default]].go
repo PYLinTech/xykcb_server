@@ -2,16 +2,15 @@ package handler
 
 import (
 	"bytes"
-	"compress/gzip"
 	"context"
 	"crypto/aes"
 	"crypto/tls"
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"image"
+	"image/color"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
@@ -30,6 +29,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/basicfont"
+	"golang.org/x/image/math/fixed"
 )
 
 // ---- [[default]].go ----
@@ -323,8 +326,8 @@ var schools = map[string]SchoolConfig{
 	"hnit_a": {
 		ID: "1",
 		Functions: []FunctionInfo{
-			{"id": "1", "url": "/web-static/plugin/hnit_a/grades.html", "zh-cn": "课程成绩", "en": "Course Grades"},
-			{"id": "2", "url": "/web-static/plugin/hnit_a/major_plan.html", "zh-cn": "培养计划", "en": "Major Plan"},
+			{"id": "1", "url": "/functions/hnit_a/grades.html", "zh-cn": "课程成绩", "en": "Course Grades"},
+			{"id": "2", "url": "/functions/hnit_a/major_plan.html", "zh-cn": "培养计划", "en": "Major Plan"},
 		},
 	},
 	"hnit_b": {
@@ -1985,7 +1988,7 @@ func parseNanhuaChunk(chunk, termID string, weekday int, fallbackSections []int)
 			location = regexp.MustCompile(`【.*?】`).ReplaceAllString(text, "")
 		default:
 			if rawTitle == "" && name == "" {
-				name = regexp.MustCompile(`[\s\u00a0]+[OPop]$`).ReplaceAllString(text, "")
+				name = regexp.MustCompile(`[\s\x{00a0}]+[OPop]$`).ReplaceAllString(text, "")
 				name = strings.TrimSpace(name)
 			}
 		}
@@ -2084,97 +2087,12 @@ type ocrSample struct {
 	feat []float64
 }
 
-func readOCRTemplatesFile() ([]byte, error) {
-	exeDir := ""
-	if exe, err := os.Executable(); err == nil {
-		exeDir = filepath.Dir(exe)
-	}
-	wd, _ := os.Getwd()
-	baseNames := []string{
-		"ocr_templates.gz",
-		filepath.Join("cloud-functions", "ocr_templates.gz"),
-	}
-	searchRoots := uniqueNonEmpty(".", wd, exeDir, filepath.Dir(wd), filepath.Dir(exeDir), "/var/task", "/workspace")
-	candidates := make([]string, 0, len(searchRoots)*len(baseNames))
-	for _, root := range searchRoots {
-		for _, name := range baseNames {
-			candidates = append(candidates, filepath.Join(root, name))
-		}
-	}
-	for _, path := range candidates {
-		if data, err := os.ReadFile(path); err == nil && len(data) > 0 {
-			return data, nil
-		}
-	}
-	for _, root := range searchRoots {
-		if data, err := findOCRTemplatesFile(root); err == nil && len(data) > 0 {
-			return data, nil
-		}
-	}
-	return nil, os.ErrNotExist
-}
-
-func uniqueNonEmpty(values ...string) []string {
-	seen := map[string]bool{}
-	var out []string
-	for _, value := range values {
-		if value == "" || value == "." {
-			value, _ = os.Getwd()
-		}
-		value = filepath.Clean(value)
-		if value == "" || value == string(os.PathSeparator) || value == os.TempDir() || seen[value] {
-			continue
-		}
-		seen[value] = true
-		out = append(out, value)
-	}
-	return out
-}
-
-func findOCRTemplatesFile(root string) ([]byte, error) {
-	if root == "" {
-		return nil, os.ErrNotExist
-	}
-	rootInfo, err := os.Stat(root)
-	if err != nil || !rootInfo.IsDir() {
-		return nil, os.ErrNotExist
-	}
-	root = filepath.Clean(root)
-	var found []byte
-	err = filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
-		if err != nil || found != nil {
-			return nil
-		}
-		if d.IsDir() {
-			if path != root && strings.Count(strings.TrimPrefix(path, root), string(os.PathSeparator)) > 3 {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		if filepath.Base(path) != "ocr_templates.gz" {
-			return nil
-		}
-		data, readErr := os.ReadFile(path)
-		if readErr == nil && len(data) > 0 {
-			found = data
-		}
-		return nil
-	})
-	if found != nil {
-		return found, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	return nil, os.ErrNotExist
-}
-
 func recognizeCaptcha(imageBytes []byte) string {
 	img, _, err := image.Decode(bytes.NewReader(imageBytes))
 	if err != nil {
 		return ""
 	}
-	ocrOnce.Do(loadOCRTemplates)
+	ocrOnce.Do(buildOCRSamples)
 	if len(ocrSamples) == 0 {
 		return ""
 	}
@@ -2191,42 +2109,69 @@ func recognizeCaptcha(imageBytes []byte) string {
 	return string(out)
 }
 
-func loadOCRTemplates() {
-	ocrTemplatesGzip, err := readOCRTemplatesFile()
-	if err != nil || len(ocrTemplatesGzip) == 0 {
-		return
-	}
-	zr, err := gzip.NewReader(bytes.NewReader(ocrTemplatesGzip))
-	if err != nil {
-		return
-	}
-	raw, err := io.ReadAll(zr)
-	_ = zr.Close()
-	if err != nil || len(raw) < 14 || string(raw[:6]) != "XYOCR1" {
-		return
-	}
-	n := int(binary.LittleEndian.Uint16(raw[6:8]))
-	w := int(binary.LittleEndian.Uint16(raw[10:12]))
-	h := int(binary.LittleEndian.Uint16(raw[12:14]))
-	if w != ocrStdW || h != ocrStdH {
-		return
-	}
-	pos := 14
-	samples := make([]ocrSample, 0, n)
-	size := ocrStdW * ocrStdH
-	for i := 0; i < n && pos+1+size <= len(raw); i++ {
-		ci := int(raw[pos])
-		pos++
-		if ci < 0 || ci >= len(ocrCharset) {
-			pos += size
-			continue
+func buildOCRSamples() {
+	angles := []float64{-14, -10, -6, -2, 0, 2, 6, 10, 14}
+	samples := make([]ocrSample, 0, len(ocrCharset)*len(angles)*2)
+	for i := 0; i < len(ocrCharset); i++ {
+		ch := ocrCharset[i]
+		for _, angle := range angles {
+			for _, bold := range []bool{false, true} {
+				gray := renderOCRGlyph(ch, angle, bold)
+				bin := grayToBinary(gray)
+				samples = append(samples, ocrSample{ch: ch, gray: gray, bin: bin, feat: ocrFeatures(bin, ocrStdH, ocrStdW)})
+			}
 		}
-		gray := append([]uint8(nil), raw[pos:pos+size]...)
-		pos += size
-		bin := grayToBinary(gray)
-		samples = append(samples, ocrSample{ch: ocrCharset[ci], gray: gray, bin: bin, feat: ocrFeatures(bin, ocrStdH, ocrStdW)})
 	}
 	ocrSamples = samples
+}
+
+func renderOCRGlyph(ch byte, angle float64, bold bool) []uint8 {
+	const w, h = 52, 56
+	img := image.NewGray(image.Rect(0, 0, w, h))
+	for i := range img.Pix {
+		img.Pix[i] = 255
+	}
+	drawOne := func(dx, dy int) {
+		d := font.Drawer{
+			Dst:  img,
+			Src:  image.NewUniform(color.Black),
+			Face: basicfont.Face7x13,
+			Dot:  fixed.P(19+dx, 34+dy),
+		}
+		d.DrawString(string([]byte{ch}))
+	}
+	drawOne(0, 0)
+	if bold {
+		drawOne(1, 0)
+		drawOne(0, 1)
+	}
+	return normalizeGray(rotateTemplateGray(img, angle))
+}
+
+func rotateTemplateGray(src *image.Gray, angle float64) [][]int {
+	b := src.Bounds()
+	w, h := b.Dx(), b.Dy()
+	out := make([][]int, h)
+	for y := range out {
+		out[y] = make([]int, w)
+		for x := range out[y] {
+			out[y][x] = 255
+		}
+	}
+	rad := angle * math.Pi / 180
+	sin, cos := math.Sin(rad), math.Cos(rad)
+	cx, cy := float64(w-1)/2, float64(h-1)/2
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; x++ {
+			fx, fy := float64(x)-cx, float64(y)-cy
+			sx := int(math.Round(cos*fx + sin*fy + cx))
+			sy := int(math.Round(-sin*fx + cos*fy + cy))
+			if sx >= 0 && sx < w && sy >= 0 && sy < h {
+				out[y][x] = int(src.GrayAt(b.Min.X+sx, b.Min.Y+sy).Y)
+			}
+		}
+	}
+	return out
 }
 
 func imageToGray(img image.Image) [][]int {

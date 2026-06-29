@@ -4,15 +4,11 @@
   "cloudFunctions": {
     "nodejs": {
       "includeFiles": [
-        "cloud-functions/ocr_templates.gz",
         "404.html"
       ]
     },
     "go": {
-      "maxDuration": 120,
-      "includeFiles": [
-        "cloud-functions/ocr_templates.gz"
-      ]
+      "maxDuration": 120
     }
   }
 }
