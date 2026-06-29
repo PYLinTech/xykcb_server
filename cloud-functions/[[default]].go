@@ -251,16 +251,10 @@ func loadNotFoundHTML() ([]byte, error) {
 }
 
 func readIncludedFile(name string) ([]byte, error) {
-	candidates := []string{
-		filepath.Join("cloud-functions", name),
-		name,
-	}
+	candidates := []string{name}
 	if exe, err := os.Executable(); err == nil {
 		dir := filepath.Dir(exe)
-		candidates = append(candidates,
-			filepath.Join(dir, "cloud-functions", name),
-			filepath.Join(dir, name),
-		)
+		candidates = append(candidates, filepath.Join(dir, name))
 	}
 	for _, path := range candidates {
 		if data, err := os.ReadFile(path); err == nil {
