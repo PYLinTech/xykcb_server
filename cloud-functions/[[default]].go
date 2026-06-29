@@ -21,8 +21,6 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -36,10 +34,6 @@ import (
 )
 
 // ---- [[default]].go ----
-var notFoundOnce sync.Once
-var notFoundHTML []byte
-var notFoundErr error
-
 type apiError struct{ DescKey string }
 
 func (e apiError) Error() string { return e.DescKey }
@@ -75,7 +69,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		"/get-hnit-b-room-borrow-form", "/submit-hnit-b-room-borrow":
 		err = appError("002")
 	default:
-		writeNotFound(w)
+		writeNotFound(w, r)
 		return
 	}
 
@@ -232,36 +226,9 @@ func writeJSON(w http.ResponseWriter, status int, body any) {
 	_ = json.NewEncoder(w).Encode(body)
 }
 
-func writeNotFound(w http.ResponseWriter) {
+func writeNotFound(w http.ResponseWriter, r *http.Request) {
 	setCORS(w)
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusNotFound)
-	if html, err := loadNotFoundHTML(); err == nil {
-		_, _ = w.Write(html)
-		return
-	}
-	_, _ = io.WriteString(w, "404 Not Found")
-}
-
-func loadNotFoundHTML() ([]byte, error) {
-	notFoundOnce.Do(func() {
-		notFoundHTML, notFoundErr = readIncludedFile("404.html")
-	})
-	return notFoundHTML, notFoundErr
-}
-
-func readIncludedFile(name string) ([]byte, error) {
-	candidates := []string{name}
-	if exe, err := os.Executable(); err == nil {
-		dir := filepath.Dir(exe)
-		candidates = append(candidates, filepath.Join(dir, name))
-	}
-	for _, path := range candidates {
-		if data, err := os.ReadFile(path); err == nil {
-			return data, nil
-		}
-	}
-	return nil, os.ErrNotExist
+	http.Redirect(w, r, "/404.html", http.StatusFound)
 }
 
 func statusFor(code string) int {

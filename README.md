@@ -33,12 +33,12 @@ xykcb_server/
 - Go 文件使用 `package handler`，并导出 `Handler(w http.ResponseWriter, r *http.Request)`，签名符合 `http.HandlerFunc`。
 - `go.mod` 放在 `cloud-functions/` 目录内。
 - `edgeone.json` 使用 `cloudFunctions.go.maxDuration` 设置 Go 函数最大运行时长。
-- 404 页面通过 `edgeone.json` include 保留根目录 `404.html`，Go 函数运行时读取这份 HTML。
+- 404 页面通过 `edgeone.json` include 保留根目录 `404.html`，Go 函数未定义路径跳转到这份静态页面。
 - 南华大学验证码由 Go 代码运行时二值化、分割并识别，不依赖外部模板文件。
 
 ## API 协议
 
-所有业务接口均使用 `GET` 请求。默认返回 `application/json; charset=utf-8`，未定义路径返回 404 HTML。
+所有业务接口均使用 `GET` 请求。默认返回 `application/json; charset=utf-8`，未定义路径跳转到 `/404.html`。
 
 | 路径 | 说明 |
 |------|------|
