@@ -308,8 +308,9 @@ var schools = map[string]SchoolConfig{
 	"hnit_a": {
 		ID: "1",
 		Functions: []FunctionInfo{
-			{"id": "1", "url": "/plugin/hnit_a/grades.html", "zh-cn": "课程成绩", "en": "Course Grades"},
-			{"id": "2", "url": "/plugin/hnit_a/major_plan.html", "zh-cn": "培养计划", "en": "Major Plan"},
+			{"id": "1", "type": "wechat_miniapp", "url": "wx86d85051303e11c0", "zh-cn": "校园圈", "en": "Campus Circle"},
+			{"id": "2", "url": "/plugin/hnit_a/grades.html", "zh-cn": "课程成绩", "en": "Course Grades"},
+			{"id": "3", "url": "/plugin/hnit_a/major_plan.html", "zh-cn": "培养计划", "en": "Major Plan"},
 		},
 	},
 	"hnit_b": {
