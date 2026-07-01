@@ -40,6 +40,13 @@ func (e apiError) Error() string { return e.DescKey }
 
 func appError(code string) error { return apiError{DescKey: code} }
 
+var errorDescs = map[string]map[string]string{
+	"005": {
+		"zh-cn": "该学校仅支持 APP 登录",
+		"en":    "This school only supports APP login",
+	},
+}
+
 func Handler(w http.ResponseWriter, r *http.Request) {
 	setCORS(w)
 	if r.Method == http.MethodOptions {
@@ -115,7 +122,7 @@ func handleCourseData(r *http.Request) (any, error) {
 		return nil, appError("002")
 	}
 	if school == "hnit_b" {
-		return nil, appError("002")
+		return nil, appError("005")
 	}
 
 	account, password := queryCredentials(r)
@@ -216,7 +223,11 @@ func writeErrorFromErr(w http.ResponseWriter, err error) {
 }
 
 func writeError(w http.ResponseWriter, code string) {
-	writeJSON(w, statusFor(code), map[string]any{"success": false, "desc_key": code})
+	body := map[string]any{"success": false, "desc_key": code}
+	if desc, ok := errorDescs[code]; ok {
+		body["desc"] = desc
+	}
+	writeJSON(w, statusFor(code), body)
 }
 
 func writeJSON(w http.ResponseWriter, status int, body any) {
@@ -239,6 +250,8 @@ func statusFor(code string) int {
 		return http.StatusNotFound
 	case "003":
 		return http.StatusUnauthorized
+	case "005":
+		return http.StatusForbidden
 	default:
 		return http.StatusInternalServerError
 	}
